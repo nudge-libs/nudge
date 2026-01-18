@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
+    "start": "ts-node src/index.ts",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },

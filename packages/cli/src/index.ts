@@ -1,1 +1,1 @@
-// CLI
+console.log("test");
