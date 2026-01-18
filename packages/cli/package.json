@@ -1,0 +1,28 @@
+{
+  "name": "@nudge/cli",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nudge/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsdown": "^0.19.0",
+    "typescript": "^5.7.0"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  }
+}
