@@ -1,0 +1,20 @@
+{
+  "name": "nudge",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "bun run --cwd packages/core build && bun run --cwd packages/ai-sdk build",
+    "dev": "bun run build && concurrently -n core,ai-sdk,example -c blue,magenta,green \"bun run --cwd packages/core dev\" \"bun run --cwd packages/ai-sdk dev\" \"bun run --cwd examples/express-app dev\"",
+    "dev:example": "bun run --cwd examples/express-app dev",
+    "clean": "bun run --cwd packages/core clean && bun run --cwd packages/ai-sdk clean",
+    "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/ai-sdk typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "tsdown": "0.19.0",
+    "typescript": "^5.7.0"
+  }
+}
