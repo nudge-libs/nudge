@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "nudge",
@@ -20,6 +19,7 @@
         "express": "^4.21.0",
       },
       "devDependencies": {
+        "@nudge/cli": "workspace:*",
         "@types/express": "^5.0.0",
         "typescript": "^5.7.0",
       },
@@ -38,6 +38,9 @@
     "packages/cli": {
       "name": "@nudge/cli",
       "version": "0.0.1",
+      "bin": {
+        "nudge": "./dist/bin.mjs",
+      },
       "dependencies": {
         "@nudge/core": "workspace:*",
       },

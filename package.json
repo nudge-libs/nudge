@@ -6,11 +6,11 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "bun run --cwd packages/core build && bun run --cwd packages/ai-sdk build",
-    "dev": "bun run build && concurrently -n core,ai-sdk,example -c blue,magenta,green \"bun run --cwd packages/core dev\" \"bun run --cwd packages/ai-sdk dev\" \"bun run --cwd examples/express-app dev\"",
+    "build": "bun run --cwd packages/core build && bun run --cwd packages/ai-sdk build && bun run --cwd packages/cli build",
+    "dev": "bun run build && concurrently -n core,ai-sdk,cli,example -c blue,magenta,green \"bun run --cwd packages/core dev\" \"bun run --cwd packages/ai-sdk dev\" \"bun run --cwd packages/cli dev\" \"bun run --cwd examples/express-app dev\"",
     "dev:example": "bun run --cwd examples/express-app dev",
-    "clean": "bun run --cwd packages/core clean && bun run --cwd packages/ai-sdk clean",
-    "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/ai-sdk typecheck"
+    "clean": "bun run --cwd packages/core clean && bun run --cwd packages/ai-sdk clean && bun run --cwd packages/cli clean",
+    "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/ai-sdk typecheck && bun run --cwd packages/cli typecheck"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

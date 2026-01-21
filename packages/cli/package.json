@@ -2,6 +2,9 @@
   "name": "@nudge/cli",
   "version": "0.0.1",
   "type": "module",
+  "bin": {
+    "nudge": "./dist/bin.mjs"
+  },
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -23,6 +26,10 @@
     ".": {
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
+    },
+    "./bin": {
+      "require": "./dist/bin.cjs",
+      "import": "./dist/bin.mjs"
     },
     "./package.json": "./package.json"
   }
