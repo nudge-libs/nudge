@@ -82,7 +82,3 @@ prompt("my-prompt", (p) =>
 |---------|-------------|
 | `@nudge/core` | Prompt builder and types |
 | `@nudge/cli` | Codegen CLI |
-
-## License
-
-MIT
