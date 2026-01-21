@@ -1,4 +1,5 @@
 import express from "express";
+import "./prompts.gen";
 import { summarizerPrompt } from "./prompts/summarizer.prompt";
 
 const app = express();
