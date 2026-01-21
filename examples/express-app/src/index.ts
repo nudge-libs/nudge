@@ -1,9 +1,11 @@
 import express from "express";
+import { summarizerPrompt } from "./prompts/summarizer.prompt";
 
 const app = express();
 app.use(express.json());
 
 app.get("/", (req, res) => {
+  console.log(summarizerPrompt.toString());
   res.json({
     message: "Example Express App",
   });
