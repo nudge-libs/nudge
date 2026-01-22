@@ -14,24 +14,12 @@
       "name": "example-express",
       "version": "0.0.1",
       "dependencies": {
-        "@nudge/ai-sdk": "workspace:*",
         "@nudge/core": "workspace:*",
         "express": "^4.21.0",
       },
       "devDependencies": {
         "@nudge/cli": "workspace:*",
         "@types/express": "^5.0.0",
-        "typescript": "^5.7.0",
-      },
-    },
-    "packages/ai-sdk": {
-      "name": "@nudge/ai-sdk",
-      "version": "0.0.1",
-      "dependencies": {
-        "@nudge/core": "workspace:*",
-      },
-      "devDependencies": {
-        "tsdown": "^0.19.0",
         "typescript": "^5.7.0",
       },
     },
@@ -43,7 +31,6 @@
       },
       "dependencies": {
         "@nudge/core": "workspace:*",
-        "zod": "^4.0.0",
       },
       "devDependencies": {
         "tsdown": "^0.19.0",
@@ -87,8 +74,6 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.9", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.0.3", "@jridgewell/sourcemap-codec": "^1.4.10" } }, "sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.1", "", { "dependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1", "@tybys/wasm-util": "^0.10.1" } }, "sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A=="],
-
-    "@nudge/ai-sdk": ["@nudge/ai-sdk@workspace:packages/ai-sdk"],
 
     "@nudge/cli": ["@nudge/cli@workspace:packages/cli"],
 
@@ -439,8 +424,6 @@
     "yargs-parser": ["yargs-parser@21.1.1", "", {}, "sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw=="],
 
     "yn": ["yn@3.1.1", "", {}, "sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q=="],
-
-    "zod": ["zod@4.3.5", "", {}, "sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g=="],
 
     "@babel/generator/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 

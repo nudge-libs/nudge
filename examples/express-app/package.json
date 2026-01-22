@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@nudge/core": "workspace:*",
-    "@nudge/ai-sdk": "workspace:*",
     "express": "^4.21.0"
   },
   "devDependencies": {
