@@ -18,6 +18,10 @@ export function createBuilder(): {
       state.push({ type: "output", description }),
       builder
     ),
+    context: (information) => (
+      state.push({ type: "context", information }),
+      builder
+    ),
     do: (instruction, options?: { nudge?: Nudge }) => (
       state.push({ type: "do", instruction, nudge: options?.nudge }),
       builder

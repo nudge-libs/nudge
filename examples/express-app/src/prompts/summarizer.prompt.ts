@@ -12,3 +12,11 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
     .dont("include unnecessary details")
     .constraint("keep it under 3 paragraphs"),
 );
+
+export const userRouterPrompt = prompt("user-router", (p) =>
+  p
+    .persona("web builder editor input router")
+    .context("intermediate agent to decide if editing of the app is necessary")
+    .input("user message")
+    .output("ASK or EDIT"),
+);

@@ -9,6 +9,7 @@ export type PromptBuilder = {
   persona: (role: string) => PromptBuilder;
   input: (description: string) => PromptBuilder;
   output: (description: string) => PromptBuilder;
+  context: (information: string) => PromptBuilder;
   do: (instruction: string, options?: { nudge?: Nudge }) => PromptBuilder;
   dont: (instruction: string, options?: { nudge?: Nudge }) => PromptBuilder;
   constraint: (rule: string, options?: { nudge?: Nudge }) => PromptBuilder;

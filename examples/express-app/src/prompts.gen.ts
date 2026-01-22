@@ -4,6 +4,7 @@ import { registerPrompts } from "@nudge/core";
 declare module "@nudge/core" {
   interface PromptRegistry {
     "summarizer": true;
+    "user-router": true;
   }
 }
 
@@ -15,6 +16,19 @@ Preserve all key facts and figures from the original text, and maintain its orig
 
 Avoid adding your own opinions or interpretations to the summary. Do not include unnecessary details that distract from the main points. Keep your summary to under 3 paragraphs, ensuring that every sentence serves a purpose in conveying the core message of the source material.`,
     hash: "a6636ac5cde3a5af",
+  },
+  "user-router": {
+    text: `You are a web builder editor input router, functioning as an intermediate agent to decide if editing of the app is necessary.
+
+You will receive a user message as input. Your role is to analyze this message and determine the appropriate response.
+
+Based on your analysis, you must output exactly one of two responses:
+
+- **ASK**: When the user message requires clarification, additional information, or cannot be acted upon directly
+- **EDIT**: When the user message contains clear instructions that warrant making changes to the app
+
+Evaluate each user message carefully to route it to the correct action.`,
+    hash: "20d0447eecc96918",
   }
 } as const;
 

@@ -21,6 +21,7 @@ import { prompt } from "@nudge/core";
 export const summarizerPrompt = prompt("summarizer", (p) =>
   p
     .persona("expert summarizer")
+    .context("Users will paste articles, documents, or notes they want condensed")
     .input("a block of text to summarize")
     .output("a concise summary")
     .do("preserve key facts and figures", { nudge: 1 })
@@ -80,6 +81,7 @@ console.log(summarizerPrompt.toString()); // Returns the AI-generated system pro
 |--------|-------------|
 | `.raw(text)` | Include raw text verbatim in the prompt |
 | `.persona(role)` | Define the AI's identity and role |
+| `.context(information)` | Provide background information or situational context |
 | `.input(description)` | Describe what input the AI will receive |
 | `.output(description)` | Specify what the AI should produce |
 | `.do(instruction, options?)` | A positive instruction to follow |
@@ -93,6 +95,7 @@ All methods are chainable:
 prompt("my-prompt", (p) =>
   p
     .persona("helpful assistant")
+    .context("This assistant helps users with technical questions")
     .do("be concise")
     .dont("use jargon")
 );

@@ -6,6 +6,7 @@ export type RawStep = { type: "raw"; value: string };
 export type PersonaStep = { type: "persona"; role: string };
 export type InputStep = { type: "input"; description: string };
 export type OutputStep = { type: "output"; description: string };
+export type ContextStep = { type: "context"; information: string };
 export type DoStep = { type: "do"; instruction: string; nudge?: Nudge };
 export type DontStep = { type: "dont"; instruction: string; nudge?: Nudge };
 export type ConstraintStep = {
@@ -20,6 +21,7 @@ export type PromptStep =
   | PersonaStep
   | InputStep
   | OutputStep
+  | ContextStep
   | DoStep
   | DontStep
   | ConstraintStep
@@ -43,6 +45,8 @@ export function formatStepForAI(step: PromptStep): string {
       return `[Input] (Describe what input the AI will receive from the user. Help the AI understand the context of what it will be working with.)\nValue: "${step.description}"`;
     case "output":
       return `[Output] (Specify what the AI should produce as output. Be clear about the expected format and content.)\nValue: "${step.description}"`;
+    case "context":
+      return `[Context] (Background information or context that helps the AI understand the situation. This is not an instruction, just helpful information.)\nValue: "${step.information}"`;
     case "do":
       return `[Do] (A positive instruction the AI must follow.)\nValue: "${step.instruction}"${formatNudge(step.nudge)}`;
     case "dont":
