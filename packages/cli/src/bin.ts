@@ -1,11 +1,13 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import * as fs from "fs";
 import * as path from "path";
+import { AIConfig } from "./ai.js";
 import { generate } from "./index.js";
 
 type NudgeConfig = {
   generatedFile?: string;
   promptFilenamePattern?: string;
+  ai?: AIConfig;
 };
 
 const cwd = process.cwd();
@@ -24,6 +26,7 @@ const targetDir = path.dirname(outputPath);
 
 generate(targetDir, outputPath, {
   promptFilenamePattern: config.promptFilenamePattern,
+  aiConfig: config.ai,
 }).catch((error) => {
   console.error("Error generating prompts:", error);
   process.exit(1);

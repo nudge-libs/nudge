@@ -8,7 +8,19 @@ declare module "@nudge/core" {
 }
 
 const prompts = {
-  "summarizer": "You are a helpful assistant that summarizes text.\nDo not add any fluff."
+  "summarizer": {
+    text: `# Summarization Task
+
+You are a summarizer. Your task is to summarize the given text concisely and clearly.
+
+**Requirements:**
+- Do not add any fluff
+- Provide only the essential information
+- Keep the summary accurate and direct
+
+Please summarize the following text:`,
+    hash: "af79da366690edea",
+  }
 } as const;
 
 registerPrompts(prompts);

@@ -1,8 +1,12 @@
-// NOTE: temporary as string array, likely needs to be more complex later
-type PromptBuilderState = string[];
+type RawStep = { type: "raw"; value: string };
+type PersonaStep = { type: "persona"; role: string };
+
+type PromptStep = RawStep | PersonaStep;
+type PromptBuilderState = PromptStep[];
 
 type PromptBuilder = {
   raw: (value: string) => PromptBuilder;
+  persona: (role: string) => PromptBuilder;
 };
 
 // Empty interface - augmented by generated file
@@ -16,10 +20,12 @@ type Prompt<Id extends string = string> = {
   toString: () => string;
 };
 
-// Cache for generated prompts, populated by registerPrompts()
-let promptCache: Record<string, string> = {};
+type GeneratedPrompt = { text: string; hash: string };
 
-function registerPrompts(prompts: Record<string, string>): void {
+// Cache for generated prompts, populated by registerPrompts()
+let promptCache: Record<string, GeneratedPrompt> = {};
+
+function registerPrompts(prompts: Record<string, GeneratedPrompt>): void {
   promptCache = { ...promptCache, ...prompts };
 }
 
@@ -30,8 +36,12 @@ function createBuilder(): {
   const state: PromptBuilderState = [];
 
   const builder: PromptBuilder = {
-    raw(value: string) {
-      state.push(value);
+    raw(value: string): PromptBuilder {
+      state.push({ type: "raw", value });
+      return builder;
+    },
+    persona(role: string): PromptBuilder {
+      state.push({ type: "persona", role });
       return builder;
     },
   };
@@ -49,8 +59,8 @@ function prompt<Id extends string>(
   return {
     id,
     _state: state,
-    toString: () => {
-      return promptCache[id] ?? state.join("\n");
+    toString: (): string => {
+      return promptCache[id]?.text ?? "";
     },
   };
 }
@@ -58,9 +68,11 @@ function prompt<Id extends string>(
 export {
   prompt,
   registerPrompts,
+  type GeneratedPrompt,
   type Prompt,
   type PromptBuilder,
   type PromptBuilderState,
   type PromptId,
   type PromptRegistry,
+  type PromptStep,
 };
