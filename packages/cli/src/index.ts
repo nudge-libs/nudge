@@ -7,6 +7,7 @@ import { discoverPrompts, type DiscoveredPrompt } from "./discover.js";
 export type GenerateOptions = {
   promptFilenamePattern?: string;
   aiConfig?: AIConfig;
+  noCache?: boolean;
 };
 
 async function generate(
@@ -31,7 +32,7 @@ async function generate(
       const existing = existingPrompts[prompt.id];
 
       let text: string;
-      if (existing && existing.hash === hash) {
+      if (!options.noCache && existing && existing.hash === hash) {
         console.log(`  ✓ "${prompt.id}" unchanged (cached)`);
         text = existing.text;
       } else {

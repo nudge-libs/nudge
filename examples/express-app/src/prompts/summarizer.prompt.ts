@@ -6,7 +6,7 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
     .input("text to summarize")
     .output("concise summary")
     .do("preserve key facts and figures")
-    .do("maintain original meaning")
+    .do("maintain original meaning", { nudge: 3 })
     .do("use clear, simple language")
     .dont("add opinions or interpretations")
     .dont("include unnecessary details")

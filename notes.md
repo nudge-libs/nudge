@@ -44,3 +44,11 @@ const messageSummarizerPrompt =
         )
         .toString()
 ```
+
+
+### Nuding Levels
+
+Note on deterministic output:
+- we can define in the system prompt what specific values mean
+- e.g. 1 = emphasize a bit, 2 = emphasize moderately, 3 = emphasize a lot
+- we can also give specific examples or words to use to emphasize so we get consistent outputs 

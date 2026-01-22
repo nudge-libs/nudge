@@ -10,6 +10,9 @@ type NudgeConfig = {
   ai?: AIConfig;
 };
 
+const args = process.argv.slice(2);
+const noCache = args.includes("--no-cache");
+
 const cwd = process.cwd();
 const configPath = path.join(cwd, "nudge.config.json");
 
@@ -27,6 +30,7 @@ const targetDir = path.dirname(outputPath);
 generate(targetDir, outputPath, {
   promptFilenamePattern: config.promptFilenamePattern,
   aiConfig: config.ai,
+  noCache,
 }).catch((error) => {
   console.error("Error generating prompts:", error);
   process.exit(1);

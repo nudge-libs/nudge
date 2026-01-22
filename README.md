@@ -1,8 +1,8 @@
 # Nudge
 
-A prompt builder with codegen for AI applications.
+A prompt builder with AI-powered codegen for AI applications.
 
-Define prompts using a fluent builder API, then run a CLI to process and generate them.
+Define prompts using a fluent builder API, then run a CLI to generate optimized system prompts.
 
 ```bash
 npm install @nudge/core @nudge/cli
@@ -19,21 +19,49 @@ Prompts must be defined in files matching `*.prompt.ts` (or `.js`). This naming 
 import { prompt } from "@nudge/core";
 
 export const summarizerPrompt = prompt("summarizer", (p) =>
-  p.raw("You are a summarization assistant.")
+  p
+    .persona("expert summarizer")
+    .input("a block of text to summarize")
+    .output("a concise summary")
+    .do("preserve key facts and figures")
+    .do("use clear, simple language")
+    .dont("add opinions or interpretations")
+    .constraint("keep under 3 paragraphs")
+    .example("The quick brown fox...", "A fox jumps over a dog.")
 );
 ```
 
-### 2. Generate
+### 2. Configure AI
+
+Create `nudge.config.json` in your project root:
+
+```json
+{
+  "ai": {
+    "provider": "openrouter",
+    "apiKeyEnvVar": "OPENROUTER_API_KEY",
+    "model": "anthropic/claude-sonnet-4"
+  }
+}
+```
+
+### 3. Generate
 
 ```bash
 npx @nudge/cli
 ```
 
-This creates `src/prompts.gen.ts` with your processed prompts.
+This creates `src/prompts.gen.ts` with your AI-generated system prompts.
+
+Use `--no-cache` to regenerate all prompts, ignoring the hash cache:
+
+```bash
+npx @nudge/cli --no-cache
+```
 
 > **Note:** Re-run the CLI after any changes to your prompt files.
 
-### 3. Import and use
+### 4. Import and use
 
 Import the generated file once at your app's entry point. After that, `.toString()` works on any prompt throughout your codebase.
 
@@ -43,38 +71,49 @@ import "./prompts.gen"; // Import once here
 
 import { summarizerPrompt } from "./summarizer.prompt";
 
-console.log(summarizerPrompt.toString()); // "You are a summarization assistant."
+console.log(summarizerPrompt.toString()); // Returns the AI-generated system prompt
 ```
 
-## Config (Optional)
+## Builder Methods
 
-Create `nudge.config.json` in your project root to customize behavior:
+| Method | Description |
+|--------|-------------|
+| `.raw(text)` | Include raw text verbatim in the prompt |
+| `.persona(role)` | Define the AI's identity and role |
+| `.input(description)` | Describe what input the AI will receive |
+| `.output(description)` | Specify what the AI should produce |
+| `.do(instruction)` | A positive instruction to follow |
+| `.dont(instruction)` | Something the AI must avoid |
+| `.constraint(rule)` | A hard rule or limitation |
+| `.example(input, output)` | An input/output example to demonstrate behavior |
 
-```json
-{
-  "generatedFile": "src/prompts.gen.ts",
-  "promptFilenamePattern": "**/*.prompt.{ts,js}"
-}
+All methods are chainable:
+
+```ts
+prompt("my-prompt", (p) =>
+  p
+    .persona("helpful assistant")
+    .do("be concise")
+    .dont("use jargon")
+);
 ```
+
+## Config Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `generatedFile` | `src/prompts.gen.ts` | Output path for generated file |
 | `promptFilenamePattern` | `**/*.prompt.{ts,js}` | Glob pattern for prompt files |
-
-## Builder Methods
-
-```ts
-prompt("my-prompt", (p) =>
-  p.raw("Raw text content")
-);
-```
+| `ai.provider` | — | `"openai"` or `"openrouter"` |
+| `ai.apiKeyEnvVar` | — | Environment variable name for API key |
+| `ai.model` | — | Model identifier |
 
 ## How It Works
 
 1. **Define** — Write prompts in `*.prompt.ts` files using the builder
-2. **Generate** — CLI discovers prompts, processes them, outputs `prompts.gen.ts`
-3. **Use** — Import the generated file once at your entry point, then `toString()` returns processed values anywhere
+2. **Generate** — CLI discovers prompts, sends them to an AI to synthesize into well-crafted system prompts
+3. **Cache** — Prompts are hashed; unchanged prompts skip AI processing on subsequent runs
+4. **Use** — Import the generated file once, then `toString()` returns the generated prompt anywhere
 
 ## Packages
 
