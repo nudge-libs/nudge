@@ -23,9 +23,9 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
     .persona("expert summarizer")
     .input("a block of text to summarize")
     .output("a concise summary")
-    .do("preserve key facts and figures")
+    .do("preserve key facts and figures", { nudge: 1 })
     .do("use clear, simple language")
-    .dont("add opinions or interpretations")
+    .dont("add opinions or interpretations", { nudge: 3 })
     .constraint("keep under 3 paragraphs")
     .example("The quick brown fox...", "A fox jumps over a dog.")
 );
@@ -82,9 +82,9 @@ console.log(summarizerPrompt.toString()); // Returns the AI-generated system pro
 | `.persona(role)` | Define the AI's identity and role |
 | `.input(description)` | Describe what input the AI will receive |
 | `.output(description)` | Specify what the AI should produce |
-| `.do(instruction)` | A positive instruction to follow |
-| `.dont(instruction)` | Something the AI must avoid |
-| `.constraint(rule)` | A hard rule or limitation |
+| `.do(instruction, options?)` | A positive instruction to follow |
+| `.dont(instruction, options?)` | Something the AI must avoid |
+| `.constraint(rule, options?)` | A hard rule or limitation |
 | `.example(input, output)` | An input/output example to demonstrate behavior |
 
 All methods are chainable:
@@ -95,6 +95,28 @@ prompt("my-prompt", (p) =>
     .persona("helpful assistant")
     .do("be concise")
     .dont("use jargon")
+);
+```
+
+## Nudge Levels
+
+The `.do()`, `.dont()`, and `.constraint()` methods accept an optional `{ nudge }` option to control instruction strength. Nudge is a number from 1-5:
+
+| Level | Strength | Example Language |
+|-------|----------|------------------|
+| `1` | Optional | "feel free to", "if you'd like" |
+| `2` | Suggestion | "consider", "when possible" |
+| `3` | Standard (default) | "keep", "avoid", "make sure" |
+| `4` | Strong | "always", "never", "it's important" |
+| `5` | Required | "you must", "under no circumstances" |
+
+```ts
+prompt("strict-assistant", (p) =>
+  p
+    .do("be helpful")
+    .do("preserve accuracy", { nudge: 4 })
+    .dont("make up information", { nudge: 5 })
+    .constraint("respond in English", { nudge: 2 })
 );
 ```
 
