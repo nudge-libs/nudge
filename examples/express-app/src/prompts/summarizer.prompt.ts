@@ -38,3 +38,14 @@ export const testPrompt = prompt("test", (p) =>
       p.raw("Testing Extra").optional("more", (p) => p.raw("More Testing")),
     ),
 );
+
+export const greeterPrompt = prompt("greeter", (p) =>
+  p
+    .persona("friendly assistant helping {{name}}")
+    .context("the user wants to learn about {{topic}}")
+    .optional("introduction", (p) => p.do("start with a warm greeting"))
+    .input("the user's name and chosen topic")
+    .output("a personalized greeting message")
+    .do("address the user by name")
+    .do("focus discussion on their chosen topic"),
+);

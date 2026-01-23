@@ -30,10 +30,25 @@ export type PromptBuilder<Optionals extends string = never> = {
   ) => PromptBuilder<Optionals | Name | Inner>;
 };
 
-// Empty interface - augmented by generated file
+// Empty interfaces - augmented by generated file
 export interface PromptRegistry {}
+export interface PromptVariables {}
 
 export type PromptId = keyof PromptRegistry;
+
+// Helper to build toString signature based on optionals and variables
+type ToStringOptions<Optionals extends string, Variables extends string> = [
+  Variables,
+] extends [never]
+  ? [Optionals] extends [never]
+    ? () => string
+    : (options?: Partial<Record<Optionals, boolean>>) => string
+  : [Optionals] extends [never]
+    ? (options: Record<Variables, string>) => string
+    : (
+        options: Record<Variables, string> &
+          Partial<Record<Optionals, boolean>>,
+      ) => string;
 
 export type Prompt<
   Id extends string = string,
@@ -41,9 +56,10 @@ export type Prompt<
 > = {
   id: Id;
   _state: PromptBuilderState;
-  toString: [Optionals] extends [never]
-    ? () => string
-    : (options?: Partial<Record<Optionals, boolean>>) => string;
+  toString: ToStringOptions<
+    Optionals,
+    Id extends keyof PromptVariables ? PromptVariables[Id] : never
+  >;
 };
 
 export type GeneratedPrompt = { text: string; hash: string };

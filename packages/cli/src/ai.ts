@@ -28,6 +28,7 @@ You will receive a series of building blocks that describe what the system promp
 
 Your job is to synthesize these blocks into a single, coherent system prompt that:
 - Flows naturally as prose instructions to an AI
+- Preserves any {{variable}} placeholders EXACTLY as written (e.g., {{name}}, {{topic}}) - these are runtime variables that will be substituted later
 - Weaves all elements together seamlessly - DO NOT create sections labeled after the block types (no "Do:", "Don't:", "Constraints:" sections)
 - Integrates positive instructions, prohibitions, and constraints into natural sentences
 - Uses clear, direct language addressing the AI as "you"

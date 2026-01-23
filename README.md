@@ -163,6 +163,40 @@ Optionals can be nested:
 prompt.toString({ format: true, json: true });
 ```
 
+## Variables
+
+Use `{{variable}}` placeholders in any builder string to create dynamic prompts. Variables are automatically extracted from the generated prompt and fully typed:
+
+```ts
+const greeter = prompt("greeter", (p) =>
+  p
+    .persona("friendly assistant helping {{name}}")
+    .context("the user wants to learn about {{topic}}")
+    .do("address the user by name")
+    .do("focus discussion on their chosen topic")
+);
+
+// Variables are required and typed:
+greeter.toString({ name: "Alice", topic: "TypeScript" });
+
+// TypeScript errors:
+greeter.toString({ name: "Alice" });           // Error: missing 'topic'
+greeter.toString({ name: "Alice", typo: "x" }); // Error: 'typo' doesn't exist
+```
+
+Variables can be combined with optionals:
+
+```ts
+const assistant = prompt("assistant", (p) =>
+  p
+    .persona("assistant for {{company}}")
+    .optional("formal", (p) => p.do("use formal language"))
+);
+
+assistant.toString({ company: "Acme Inc" });                    // Base prompt
+assistant.toString({ company: "Acme Inc", formal: true });      // With formal option
+```
+
 ## Nudge Levels
 
 The `.do()`, `.dont()`, and `.constraint()` methods accept an optional `{ nudge }` option to control instruction strength. Nudge is a number from 1-5:

@@ -9,6 +9,7 @@ import type {
   PromptId,
   PromptRegistry,
   PromptStep,
+  PromptVariables,
   StepType,
 } from "./types.js";
 
@@ -19,17 +20,24 @@ function registerPrompts(prompts: Record<string, GeneratedPrompt>): void {
   promptCache = { ...promptCache, ...prompts };
 }
 
-function processOptionals(
+function processTemplate(
   text: string,
-  options: Record<string, boolean> = {},
+  options: Record<string, string | boolean> = {},
 ): string {
   // Recursively process optional blocks (handles nesting)
-  const process = (str: string): string =>
+  const processOptionals = (str: string): string =>
     str.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, name, content) =>
-      options[name] ? process(content) : "",
+      options[name] ? processOptionals(content) : "",
     );
 
-  return process(text).replace(/\n{3,}/g, "\n\n");
+  // Replace variables {{name}} (not #name or /name)
+  const processVars = (str: string): string =>
+    str.replace(/\{\{(?![#\/])(\w+)\}\}/g, (match, name) => {
+      const value = options[name];
+      return typeof value === "string" ? value : match;
+    });
+
+  return processVars(processOptionals(text)).replace(/\n{3,}/g, "\n\n");
 }
 
 function prompt<Id extends string, Optionals extends string = never>(
@@ -42,9 +50,9 @@ function prompt<Id extends string, Optionals extends string = never>(
   return {
     id,
     _state: state,
-    toString: ((options?: Record<string, boolean>): string => {
+    toString: ((options?: Record<string, string | boolean>): string => {
       const text = promptCache[id]?.text ?? "";
-      return processOptionals(text, options).trim();
+      return processTemplate(text, options).trim();
     }) as Prompt<Id, Optionals>["toString"],
   };
 }
@@ -61,5 +69,6 @@ export {
   type PromptId,
   type PromptRegistry,
   type PromptStep,
+  type PromptVariables,
   type StepType,
 };
