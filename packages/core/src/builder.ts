@@ -38,6 +38,7 @@ export function createBuilder(): {
       state.push({ type: "example", input, output }),
       builder
     ),
+    use: (source) => (state.push(...source._state), builder),
   };
 
   return { builder, state };

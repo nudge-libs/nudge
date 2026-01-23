@@ -88,6 +88,7 @@ console.log(summarizerPrompt.toString()); // Returns the AI-generated system pro
 | `.dont(instruction, options?)` | Something the AI must avoid |
 | `.constraint(rule, options?)` | A hard rule or limitation |
 | `.example(input, output)` | An input/output example to demonstrate behavior |
+| `.use(prompt)` | Include all steps from another prompt |
 
 All methods are chainable:
 
@@ -98,6 +99,28 @@ prompt("my-prompt", (p) =>
     .context("This assistant helps users with technical questions")
     .do("be concise")
     .dont("use jargon")
+);
+```
+
+## Reusing Prompts
+
+Use `.use()` to include steps from another prompt, making it easy to share common rules:
+
+```ts
+// Define reusable rules
+const jsonRules = prompt("json-rules", (p) =>
+  p
+    .output("valid JSON")
+    .constraint("output must be parseable JSON", { nudge: 5 })
+);
+
+// Reuse in other prompts
+const summarizer = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .use(jsonRules) // includes output and constraint from jsonRules
+    .do("preserve key facts")
 );
 ```
 

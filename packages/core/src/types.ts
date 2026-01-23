@@ -14,6 +14,7 @@ export type PromptBuilder = {
   dont: (instruction: string, options?: { nudge?: Nudge }) => PromptBuilder;
   constraint: (rule: string, options?: { nudge?: Nudge }) => PromptBuilder;
   example: (input: string, output: string) => PromptBuilder;
+  use: (source: { _state: PromptBuilderState }) => PromptBuilder;
 };
 
 // Empty interface - augmented by generated file
