@@ -1,0 +1,68 @@
+---
+title: Reusing Prompts
+description: Share common rules across prompts.
+---
+
+## The `.use()` Method
+
+Include another prompt's steps:
+
+```ts
+const jsonRules = prompt("json-rules", (p) =>
+  p
+    .output("valid JSON")
+    .constraint("must be parseable JSON", { nudge: 5 })
+);
+
+const summarizer = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .use(jsonRules) // includes the JSON rules
+    .do("preserve key facts")
+);
+```
+
+## Patterns
+
+### Shared formats
+
+```ts
+const markdown = prompt("markdown", (p) =>
+  p.output("well-formatted Markdown")
+    .do("use proper heading hierarchy")
+);
+
+const docWriter = prompt("doc-writer", (p) =>
+  p.persona("technical writer").use(markdown)
+);
+
+const blogWriter = prompt("blog-writer", (p) =>
+  p.persona("blog author").use(markdown)
+);
+```
+
+### Shared safety rules
+
+```ts
+const safety = prompt("safety", (p) =>
+  p
+    .dont("generate harmful content", { nudge: 5 })
+    .dont("provide medical advice", { nudge: 5 })
+);
+
+const chatbot = prompt("chatbot", (p) =>
+  p.persona("helpful assistant").use(safety)
+);
+```
+
+### Multiple includes
+
+```ts
+const assistant = prompt("assistant", (p) =>
+  p
+    .use(safety)
+    .use(markdown)
+    .use(jsonRules)
+);
+```

@@ -1,0 +1,67 @@
+---
+title: Optional Blocks
+description: Toggle sections at runtime.
+---
+
+## The `.optional()` Method
+
+Define sections that can be enabled/disabled at runtime:
+
+```ts
+const summarizer = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .output("concise summary")
+    .optional("json", (p) =>
+      p.output("valid JSON").constraint("must be parseable")
+    )
+);
+
+// Use without option
+summarizer.toString();
+
+// Use with option
+summarizer.toString({ json: true });
+```
+
+## Type Safety
+
+TypeScript knows your options:
+
+```ts
+summarizer.toString({ json: true });  // ✅
+summarizer.toString({ xml: true });   // ❌ TypeScript error
+```
+
+## Nested Optionals
+
+```ts
+const writer = prompt("writer", (p) =>
+  p
+    .output("content")
+    .optional("format", (p) =>
+      p
+        .output("structured output")
+        .optional("json", (p) => p.constraint("use JSON"))
+        .optional("xml", (p) => p.constraint("use XML"))
+    )
+);
+
+writer.toString({ format: true, json: true });
+```
+
+## Example: Verbose Mode
+
+```ts
+const analyzer = prompt("analyzer", (p) =>
+  p
+    .persona("data analyst")
+    .output("analysis")
+    .optional("verbose", (p) =>
+      p.do("include methodology").do("show confidence intervals")
+    )
+);
+
+analyzer.toString();                  // quick analysis
+analyzer.toString({ verbose: true }); // detailed analysis
+```

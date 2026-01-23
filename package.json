@@ -3,12 +3,14 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "examples/*"
+    "examples/*",
+    "apps/*"
   ],
   "scripts": {
     "build": "bun run --cwd packages/core build && bun run --cwd packages/cli build",
     "dev": "bun run build && concurrently -n core,cli,example -c blue,green,magenta \"bun run --cwd packages/core dev\" \"bun run --cwd packages/cli dev\" \"bun run --cwd examples/express-app dev\"",
     "dev:example": "bun run --cwd examples/express-app dev",
+    "dev:docs": "bun run --cwd apps/docs dev",
     "clean": "bun run --cwd packages/core clean && bun run --cwd packages/cli clean",
     "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/cli typecheck"
   },

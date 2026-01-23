@@ -1,0 +1,100 @@
+---
+title: Builder API
+description: All the methods for defining prompts.
+---
+
+## Overview
+
+All methods are chainable:
+
+```ts
+prompt("my-prompt", (p) =>
+  p
+    .persona("helpful assistant")
+    .input("user question")
+    .output("helpful answer")
+    .do("be concise")
+    .dont("make things up")
+);
+```
+
+## Core Methods
+
+### `.persona(role)`
+Define who the AI is.
+
+```ts
+p.persona("senior software engineer")
+```
+
+### `.input(description)` / `.output(description)`
+What goes in, what comes out.
+
+```ts
+p.input("code snippet to review")
+p.output("review with actionable suggestions")
+```
+
+### `.context(information)`
+Background info the AI needs.
+
+```ts
+p.context("The user is building a React application")
+```
+
+## Instructions
+
+### `.do(instruction)` / `.dont(instruction)`
+Positive and negative instructions.
+
+```ts
+p.do("explain your reasoning")
+p.dont("use jargon")
+```
+
+### `.constraint(rule)`
+Hard rules to follow.
+
+```ts
+p.constraint("respond in under 100 words")
+```
+
+### Nudge levels
+
+Control instruction strength with `{ nudge: 1-5 }`:
+
+| Level | Meaning |
+|-------|---------|
+| 1 | Optional — "if you'd like" |
+| 2 | Suggestion — "consider" |
+| 3 | Standard (default) |
+| 4 | Strong — "always" |
+| 5 | Required — "you must" |
+
+```ts
+p.do("cite sources", { nudge: 4 })        // strong
+p.dont("make up facts", { nudge: 5 })     // required
+```
+
+## Other Methods
+
+### `.example(input, output)`
+Show expected behavior.
+
+```ts
+p.example("What's 2+2?", "4")
+```
+
+### `.raw(text)`
+Include text verbatim.
+
+```ts
+p.raw("Always respond in JSON format.")
+```
+
+### `.use(otherPrompt)`
+Include another prompt's steps. See [Reusing Prompts](/docs/reusing-prompts).
+
+### `.optional(name, builder)`
+Conditional blocks. See [Optional Blocks](/docs/optional-blocks).
+```

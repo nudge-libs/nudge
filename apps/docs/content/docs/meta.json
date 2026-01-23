@@ -1,0 +1,14 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "---API---",
+    "basic-methods",
+    "reusing-prompts",
+    "optional-blocks",
+    "variables",
+    "---",
+    "configuration"
+  ]
+}

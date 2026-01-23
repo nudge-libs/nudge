@@ -1,0 +1,70 @@
+---
+title: Variables
+description: Dynamic prompts with placeholders.
+---
+
+## `{{variable}}` Syntax
+
+Use double braces in any string:
+
+```ts
+const greeter = prompt("greeter", (p) =>
+  p
+    .persona("assistant helping {{name}}")
+    .context("topic: {{topic}}")
+);
+```
+
+## Type Safety
+
+Variables are extracted and typed automatically:
+
+```ts
+greeter.toString({ name: "Alice", topic: "TypeScript" }); // ✅
+greeter.toString({ name: "Alice" });                       // ❌ missing 'topic'
+```
+
+## Works Everywhere
+
+Variables work in any builder method:
+
+```ts
+const helper = prompt("helper", (p) =>
+  p
+    .persona("{{role}} assistant")
+    .context("domain: {{domain}}")
+    .output("{{outputFormat}}")
+    .constraint("max {{maxWords}} words")
+);
+
+helper.toString({
+  role: "senior dev",
+  domain: "TypeScript",
+  outputFormat: "code review",
+  maxWords: "200"
+});
+```
+
+## With Optionals
+
+Variables inside optional blocks are only required when enabled:
+
+```ts
+const assistant = prompt("assistant", (p) =>
+  p
+    .persona("assistant for {{company}}")
+    .optional("formal", (p) => 
+      p.do("use formal language for {{audience}}")
+    )
+);
+
+// Only 'company' required
+assistant.toString({ company: "Acme" });
+
+// Both required when formal=true
+assistant.toString({ 
+  company: "Acme", 
+  formal: true, 
+  audience: "executives" 
+});
+```

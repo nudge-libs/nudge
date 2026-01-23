@@ -1,0 +1,77 @@
+---
+title: Getting Started
+description: Get up and running with Nudge in minutes.
+---
+
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Installation
+
+<Tabs items={['npm', 'pnpm', 'bun']}>
+  <Tab value="npm">
+    ```bash
+    npm install @nudge/core @nudge/cli
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add @nudge/core @nudge/cli
+    ```
+  </Tab>
+  <Tab value="bun">
+    ```bash
+    bun add @nudge/core @nudge/cli
+    ```
+  </Tab>
+</Tabs>
+
+## Quick Start
+
+### 1. Create a prompt file
+
+```ts title="src/summarizer.prompt.ts"
+import { prompt } from "@nudge/core";
+
+export const summarizerPrompt = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("a block of text")
+    .output("a concise summary")
+    .do("preserve key facts")
+    .constraint("keep under 3 paragraphs")
+);
+```
+
+<Callout>
+  Prompts must be in `*.prompt.ts` files for the CLI to find them.
+</Callout>
+
+### 2. Configure AI
+
+```json title="nudge.config.json"
+{
+  "ai": {
+    "provider": "openrouter",
+    "apiKeyEnvVar": "OPENROUTER_API_KEY",
+    "model": "anthropic/claude-sonnet-4"
+  }
+}
+```
+
+### 3. Generate
+
+```bash
+npx @nudge/cli
+```
+
+This creates `src/prompts.gen.ts` with your AI-generated system prompts.
+
+### 4. Use it
+
+```ts title="src/index.ts"
+import "./prompts.gen";
+import { summarizerPrompt } from "./summarizer.prompt";
+
+console.log(summarizerPrompt.toString()); // → AI-generated prompt
+```
