@@ -1,11 +1,11 @@
 import type { Nudge } from "./steps.js";
 import type { PromptBuilder, PromptBuilderState } from "./types.js";
 
-export function createBuilder(): {
+export function createBuilder(targetState?: PromptBuilderState): {
   builder: PromptBuilder;
   state: PromptBuilderState;
 } {
-  const state: PromptBuilderState = [];
+  const state: PromptBuilderState = targetState ?? [];
 
   const builder: PromptBuilder = {
     raw: (value) => (state.push({ type: "raw", value }), builder),
@@ -39,6 +39,13 @@ export function createBuilder(): {
       builder
     ),
     use: (source) => (state.push(...source._state), builder),
+    optional: (name, builderFn) => {
+      const optionalSteps: PromptBuilderState = [];
+      const { builder: innerBuilder } = createBuilder(optionalSteps);
+      builderFn(innerBuilder);
+      state.push({ type: "optional", name, steps: optionalSteps });
+      return builder;
+    },
   };
 
   return { builder, state };

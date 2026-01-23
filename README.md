@@ -89,6 +89,7 @@ console.log(summarizerPrompt.toString()); // Returns the AI-generated system pro
 | `.constraint(rule, options?)` | A hard rule or limitation |
 | `.example(input, output)` | An input/output example to demonstrate behavior |
 | `.use(prompt)` | Include all steps from another prompt |
+| `.optional(name, builderFn)` | Define a conditional block that can be toggled at runtime |
 
 All methods are chainable:
 
@@ -122,6 +123,44 @@ const summarizer = prompt("summarizer", (p) =>
     .use(jsonRules) // includes output and constraint from jsonRules
     .do("preserve key facts")
 );
+```
+
+## Optional Blocks
+
+Use `.optional()` to define conditional sections that can be toggled at runtime:
+
+```ts
+const summarizer = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .output("concise summary")
+    .optional("json", (p) =>
+      p
+        .output("valid JSON object")
+        .constraint("must be parseable JSON")
+    )
+);
+
+// At runtime, toggle optional blocks via toString():
+summarizer.toString();               // Base prompt only
+summarizer.toString({ json: true }); // Includes JSON instructions
+```
+
+Optional names are fully typed—TypeScript will autocomplete available options and error on invalid ones.
+
+Optionals can be nested:
+
+```ts
+.optional("format", (p) =>
+  p
+    .output("structured output")
+    .optional("json", (p) => p.constraint("use JSON format"))
+    .optional("xml", (p) => p.constraint("use XML format"))
+)
+
+// All options are available at the top level:
+prompt.toString({ format: true, json: true });
 ```
 
 ## Nudge Levels

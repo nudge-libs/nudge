@@ -15,6 +15,11 @@ export type ConstraintStep = {
   nudge?: Nudge;
 };
 export type ExampleStep = { type: "example"; input: string; output: string };
+export type OptionalStep = {
+  type: "optional";
+  name: string;
+  steps: PromptStep[];
+};
 
 export type PromptStep =
   | RawStep
@@ -25,7 +30,8 @@ export type PromptStep =
   | DoStep
   | DontStep
   | ConstraintStep
-  | ExampleStep;
+  | ExampleStep
+  | OptionalStep;
 
 export type StepType = PromptStep["type"];
 
@@ -55,5 +61,9 @@ export function formatStepForAI(step: PromptStep): string {
       return `[Constraint] (A rule or limitation the AI must respect.)\nValue: "${step.rule}"${formatNudge(step.nudge)}`;
     case "example":
       return `[Example] (An input/output example showing the AI how to respond. Use these to demonstrate the expected behavior.)\nInput: "${step.input}"\nExpected output: "${step.output}"`;
+    case "optional": {
+      const innerSteps = step.steps.map(formatStepForAI).join("\n\n");
+      return `[Optional Block Start: "${step.name}"] (The following instructions are OPTIONAL. Wrap the generated content for these in {{#${step.name}}}...{{/${step.name}}} markers so it can be toggled at runtime.)\n\n${innerSteps}\n\n[Optional Block End: "${step.name}"]`;
+    }
   }
 }

@@ -16,7 +16,10 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
     .do("preserve key facts and figures")
     .do("maintain original meaning", { nudge: 3 })
     .use(conciseRules)
-    .dont("add opinions or interpretations"),
+    .dont("add opinions or interpretations")
+    .optional("json", (p) =>
+      p.output("valid JSON object").constraint("must be parseable JSON"),
+    ),
 );
 
 export const userRouterPrompt = prompt("user-router", (p) =>
@@ -26,4 +29,12 @@ export const userRouterPrompt = prompt("user-router", (p) =>
     .input("user message")
     .output("ASK or EDIT")
     .use(conciseRules),
+);
+
+export const testPrompt = prompt("test", (p) =>
+  p
+    .raw("First Test")
+    .optional("extra", (p) =>
+      p.raw("Testing Extra").optional("more", (p) => p.raw("More Testing")),
+    ),
 );
