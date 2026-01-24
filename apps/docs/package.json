@@ -23,6 +23,7 @@
   "devDependencies": {
     "@react-router/dev": "^7.12.0",
     "@tailwindcss/vite": "^4.1.18",
+    "fast-glob": "^3.3.3",
     "@types/mdx": "^2.0.13",
     "@types/node": "^25.0.10",
     "@types/react": "^19.2.9",
