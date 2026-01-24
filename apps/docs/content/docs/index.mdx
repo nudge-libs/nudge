@@ -1,17 +1,17 @@
 ---
 title: Introduction
-description: A prompt builder with AI-powered codegen for AI applications.
+description: Type-safe prompt builder with AI-powered codegen.
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
 <Callout type="warn">
-  Nudge is in **pre-release**. APIs may change.
+  Nudge is in **pre-release**. Expect breaking changes.
 </Callout>
 
 ## What is Nudge?
 
-Stop hand-crafting system prompts. Define what you want with a builder, let AI write the actual prompt.
+Nudge is a TypeScript library for building AI prompts. You define *what* your prompt should do with a fluent builder-Nudge uses AI to generate the actual system prompt.
 
 ```ts
 import { prompt } from "@nudge/core";
@@ -21,35 +21,31 @@ const reviewer = prompt("code-reviewer", (p) =>
     .persona("senior engineer")
     .input("code snippet")
     .output("review with suggestions")
-    .do("explain your reasoning")
+    .do("explain reasoning")
     .dont("nitpick style")
 );
 ```
 
-Run `npx @nudge/cli` and get an optimized system prompt—cached so it only regenerates when you change the definition.
+Run `npx @nudge/cli generate` → get an optimized system prompt. It's cached, so unchanged definitions skip the AI call.
 
-## Why Nudge?
+## Why use it?
 
-**Type-safe** — Full TypeScript support. Autocomplete for methods, typed variables, typed optional blocks.
+- **Type-safe** - Full autocomplete. Typed variables and options.
+- **AI-generated** - Your structure becomes a polished prompt. No hand-tuning.
+- **Cached** - Hash-based caching. Only regenerate what changed.
+- **Composable** - Share rules with `.use()`. Toggle sections with `.optional()`.
 
-**AI-powered** — Your structured definition becomes a well-crafted system prompt. No more prompt engineering by hand.
-
-**Cached** — Prompts are hashed. Unchanged prompts skip the AI call entirely.
-
-**Composable** — Share common rules with `.use()`. Toggle sections at runtime with `.optional()`.
-
-## Quick Example
+## Example
 
 ```ts
-// Define once
 const assistant = prompt("assistant", (p) =>
   p
-    .persona("helpful assistant for {{company}}")
+    .persona("assistant for {{company}}")
     .do("be concise")
     .optional("formal", (p) => p.do("use formal language"))
 );
 
-// Use with variables and options
+// Variables and options are fully typed
 assistant.toString({ company: "Acme", formal: true });
 ```
 
@@ -57,5 +53,5 @@ assistant.toString({ company: "Acme", formal: true });
 
 | Package | Description |
 |---------|-------------|
-| `@nudge/core` | Prompt builder |
+| `@nudge/core` | The prompt builder |
 | `@nudge/cli` | Codegen CLI |

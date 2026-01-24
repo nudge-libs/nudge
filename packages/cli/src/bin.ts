@@ -11,6 +11,13 @@ type NudgeConfig = {
 };
 
 const args = process.argv.slice(2);
+const command = args[0];
+
+if (command !== "generate") {
+  console.error(`Usage: nudge generate [--no-cache]`);
+  process.exit(1);
+}
+
 const noCache = args.includes("--no-cache");
 
 const cwd = process.cwd();

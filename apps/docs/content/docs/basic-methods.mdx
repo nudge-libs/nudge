@@ -1,100 +1,91 @@
 ---
 title: Builder API
-description: All the methods for defining prompts.
+description: Methods for defining prompts.
 ---
 
-## Overview
+## Basics
 
-All methods are chainable:
+All methods chain:
 
 ```ts
-prompt("my-prompt", (p) =>
+prompt("assistant", (p) =>
   p
     .persona("helpful assistant")
-    .input("user question")
-    .output("helpful answer")
+    .input("question")
+    .output("answer")
     .do("be concise")
-    .dont("make things up")
 );
 ```
 
-## Core Methods
+## Identity
 
 ### `.persona(role)`
-Define who the AI is.
 
 ```ts
-p.persona("senior software engineer")
+p.persona("senior engineer")
 ```
 
-### `.input(description)` / `.output(description)`
-What goes in, what comes out.
+### `.input(desc)` / `.output(desc)`
 
 ```ts
-p.input("code snippet to review")
-p.output("review with actionable suggestions")
+p.input("code to review")
+p.output("actionable feedback")
 ```
 
-### `.context(information)`
-Background info the AI needs.
+### `.context(info)`
 
 ```ts
-p.context("The user is building a React application")
+p.context("user is building a React app")
 ```
 
 ## Instructions
 
 ### `.do(instruction)` / `.dont(instruction)`
-Positive and negative instructions.
 
 ```ts
-p.do("explain your reasoning")
+p.do("explain reasoning")
 p.dont("use jargon")
 ```
 
 ### `.constraint(rule)`
-Hard rules to follow.
 
 ```ts
-p.constraint("respond in under 100 words")
+p.constraint("under 100 words")
 ```
 
 ### Nudge levels
 
-Control instruction strength with `{ nudge: 1-5 }`:
+Control strength with `{ nudge: 1-5 }`:
 
 | Level | Meaning |
 |-------|---------|
-| 1 | Optional — "if you'd like" |
-| 2 | Suggestion — "consider" |
-| 3 | Standard (default) |
+| 1 | Light — "if you'd like" |
+| 2 | Soft — "consider" |
+| 3 | Default |
 | 4 | Strong — "always" |
-| 5 | Required — "you must" |
+| 5 | Required — "must" |
 
 ```ts
-p.do("cite sources", { nudge: 4 })        // strong
-p.dont("make up facts", { nudge: 5 })     // required
+p.do("cite sources", { nudge: 4 })
+p.dont("fabricate", { nudge: 5 })
 ```
 
-## Other Methods
+## Extras
 
 ### `.example(input, output)`
-Show expected behavior.
 
 ```ts
-p.example("What's 2+2?", "4")
+p.example("2+2?", "4")
 ```
 
 ### `.raw(text)`
-Include text verbatim.
+
+Include verbatim text:
 
 ```ts
-p.raw("Always respond in JSON format.")
+p.raw("Always respond in JSON.")
 ```
 
-### `.use(otherPrompt)`
-Include another prompt's steps. See [Reusing Prompts](/docs/reusing-prompts).
+### `.use(prompt)` / `.optional(name, builder)`
 
-### `.optional(name, builder)`
-Conditional blocks. See [Optional Blocks](/docs/optional-blocks).
-```
+See [Reusing Prompts](/docs/reusing-prompts) and [Optional Blocks](/docs/optional-blocks).

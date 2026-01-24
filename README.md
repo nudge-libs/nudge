@@ -49,7 +49,7 @@ Create `nudge.config.json` in your project root:
 ### 3. Generate
 
 ```bash
-npx @nudge/cli
+npx @nudge/cli generate
 ```
 
 This creates `src/prompts.gen.ts` with your AI-generated system prompts.
@@ -57,7 +57,7 @@ This creates `src/prompts.gen.ts` with your AI-generated system prompts.
 Use `--no-cache` to regenerate all prompts, ignoring the hash cache:
 
 ```bash
-npx @nudge/cli --no-cache
+npx @nudge/cli generate --no-cache
 ```
 
 > **Note:** Re-run the CLI after any changes to your prompt files.

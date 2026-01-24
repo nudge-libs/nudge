@@ -1,17 +1,17 @@
 ---
 title: Getting Started
-description: Get up and running with Nudge in minutes.
+description: Install Nudge and generate your first prompt.
 ---
 
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 import { Callout } from 'fumadocs-ui/components/callout';
 
-## Installation
+## Install
 
 <Tabs items={['npm', 'pnpm', 'bun']}>
   <Tab value="npm">
     ```bash
-    npm install @nudge/core @nudge/cli
+    npm i @nudge/core @nudge/cli
     ```
   </Tab>
   <Tab value="pnpm">
@@ -26,28 +26,30 @@ import { Callout } from 'fumadocs-ui/components/callout';
   </Tab>
 </Tabs>
 
-## Quick Start
+## Setup
 
-### 1. Create a prompt file
+### 1. Define a prompt
+
+Create a file ending in `.prompt.ts`:
 
 ```ts title="src/summarizer.prompt.ts"
 import { prompt } from "@nudge/core";
 
-export const summarizerPrompt = prompt("summarizer", (p) =>
+export const summarizer = prompt("summarizer", (p) =>
   p
     .persona("expert summarizer")
-    .input("a block of text")
-    .output("a concise summary")
+    .input("text to summarize")
+    .output("concise summary")
     .do("preserve key facts")
-    .constraint("keep under 3 paragraphs")
+    .constraint("max 3 paragraphs")
 );
 ```
 
 <Callout>
-  Prompts must be in `*.prompt.ts` files for the CLI to find them.
+  The CLI only discovers `*.prompt.ts` files.
 </Callout>
 
-### 2. Configure AI
+### 2. Add config
 
 ```json title="nudge.config.json"
 {
@@ -59,19 +61,21 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
 }
 ```
 
+Set `provider` to `"openrouter"` or `"openai"`, and point `apiKeyEnvVar` to your environment variable. Medium to large models are recommended for best results.
+
 ### 3. Generate
 
 ```bash
-npx @nudge/cli
+npx @nudge/cli generate
 ```
 
-This creates `src/prompts.gen.ts` with your AI-generated system prompts.
+Creates `src/prompts.gen.ts` with your AI-generated system prompts.
 
-### 4. Use it
+### 4. Use
 
 ```ts title="src/index.ts"
 import "./prompts.gen";
-import { summarizerPrompt } from "./summarizer.prompt";
+import { summarizer } from "./summarizer.prompt";
 
-console.log(summarizerPrompt.toString()); // → AI-generated prompt
+summarizer.toString(); // → AI-generated prompt
 ```

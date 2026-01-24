@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "bin": {
-    "nudge": "./dist/bin.mjs"
+    "nudge": "./dist/bin.cjs"
   },
   "scripts": {
     "build": "tsdown",
