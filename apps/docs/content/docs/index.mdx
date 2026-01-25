@@ -14,7 +14,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 Nudge is a TypeScript library for building AI prompts. You define *what* your prompt should do with a fluent builder-Nudge uses AI to generate the actual system prompt.
 
 ```ts
-import { prompt } from "@nudge/core";
+import { prompt } from "@nudge-ai/core";
 
 const reviewer = prompt("code-reviewer", (p) =>
   p
@@ -26,7 +26,7 @@ const reviewer = prompt("code-reviewer", (p) =>
 );
 ```
 
-Run `npx @nudge/cli generate` → get an optimized system prompt. It's cached, so unchanged definitions skip the AI call.
+Run `npx @nudge-ai/cli generate` → get an optimized system prompt. It's cached, so unchanged definitions skip the AI call.
 
 ## Why use it?
 
@@ -53,5 +53,5 @@ assistant.toString({ company: "Acme", formal: true });
 
 | Package | Description |
 |---------|-------------|
-| `@nudge/core` | The prompt builder |
-| `@nudge/cli` | Codegen CLI |
+| `@nudge-ai/core` | The prompt builder |
+| `@nudge-ai/cli` | Codegen CLI |

@@ -1,4 +1,4 @@
-import { formatStepForAI, type PromptStep } from "@nudge/core";
+import { formatStepForAI, type PromptStep } from "@nudge-ai/core";
 import * as z from "zod/mini";
 
 export type AIConfig = {

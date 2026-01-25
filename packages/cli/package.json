@@ -1,5 +1,5 @@
 {
-  "name": "@nudge/cli",
+  "name": "@nudge-ai/cli",
   "version": "0.0.0",
   "description": "CLI for Nudge - generate type-safe prompt files for AI applications",
   "type": "module",
@@ -29,7 +29,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@nudge/core": "workspace:*",
+    "@nudge-ai/core": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {

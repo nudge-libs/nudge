@@ -14,7 +14,7 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-const builderCode = `import { prompt } from "@nudge/core";
+const builderCode = `import { prompt } from "@nudge-ai/core";
 
 export const summarizer = prompt("summarizer", (p) =>
   p
@@ -66,7 +66,7 @@ export default function Home() {
           <code className="bg-fd-muted/50 border border-fd-border rounded-md px-4 py-2 text-sm">
             <span className="text-fd-muted-foreground select-none">$ </span>
             <span className="text-fd-foreground">
-              npm i @nudge/core @nudge/cli
+              npm i @nudge-ai/core @nudge-ai/cli
             </span>
           </code>
           <div className="flex gap-3">

@@ -5,7 +5,7 @@ A prompt builder with AI-powered codegen for AI applications.
 Define prompts using a fluent builder API, then run a CLI to generate optimized system prompts.
 
 ```bash
-npm install @nudge/core @nudge/cli
+npm install @nudge-ai/core @nudge-ai/cli
 ```
 
 ## Quick Start
@@ -16,7 +16,7 @@ Prompts must be defined in files matching `*.prompt.ts` (or `.js`). This naming 
 
 ```ts
 // src/summarizer.prompt.ts
-import { prompt } from "@nudge/core";
+import { prompt } from "@nudge-ai/core";
 
 export const summarizerPrompt = prompt("summarizer", (p) =>
   p
@@ -49,7 +49,7 @@ Create `nudge.config.json` in your project root:
 ### 3. Generate
 
 ```bash
-npx @nudge/cli generate
+npx @nudge-ai/cli generate
 ```
 
 This creates `src/prompts.gen.ts` with your AI-generated system prompts.
@@ -57,7 +57,7 @@ This creates `src/prompts.gen.ts` with your AI-generated system prompts.
 Use `--no-cache` to regenerate all prompts, ignoring the hash cache:
 
 ```bash
-npx @nudge/cli generate --no-cache
+npx @nudge-ai/cli generate --no-cache
 ```
 
 > **Note:** Re-run the CLI after any changes to your prompt files.
@@ -240,5 +240,5 @@ prompt("strict-assistant", (p) =>
 
 | Package | Description |
 |---------|-------------|
-| `@nudge/core` | Prompt builder and types |
-| `@nudge/cli` | Codegen CLI |
+| `@nudge-ai/core` | Prompt builder and types |
+| `@nudge-ai/cli` | Codegen CLI |

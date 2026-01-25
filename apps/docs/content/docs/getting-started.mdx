@@ -11,17 +11,17 @@ import { Callout } from 'fumadocs-ui/components/callout';
 <Tabs items={['npm', 'pnpm', 'bun']}>
   <Tab value="npm">
     ```bash
-    npm i @nudge/core @nudge/cli
+    npm i @nudge-ai/core @nudge-ai/cli
     ```
   </Tab>
   <Tab value="pnpm">
     ```bash
-    pnpm add @nudge/core @nudge/cli
+    pnpm add @nudge-ai/core @nudge-ai/cli
     ```
   </Tab>
   <Tab value="bun">
     ```bash
-    bun add @nudge/core @nudge/cli
+    bun add @nudge-ai/core @nudge-ai/cli
     ```
   </Tab>
 </Tabs>
@@ -33,7 +33,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 Create a file ending in `.prompt.ts`:
 
 ```ts title="src/summarizer.prompt.ts"
-import { prompt } from "@nudge/core";
+import { prompt } from "@nudge-ai/core";
 
 export const summarizer = prompt("summarizer", (p) =>
   p
@@ -66,7 +66,7 @@ Set `provider` to `"openrouter"` or `"openai"`, and point `apiKeyEnvVar` to your
 ### 3. Generate
 
 ```bash
-npx @nudge/cli generate
+npx @nudge-ai/cli generate
 ```
 
 Creates `src/prompts.gen.ts` with your AI-generated system prompts.

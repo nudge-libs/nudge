@@ -9,7 +9,7 @@
 
 
 ```ts
-import { prompt, workflowStep, outputs, param } from "@nudge/core";
+import { prompt, workflowStep, outputs, param } from "@nudge-ai/core";
 
 const planStep = plan('design the ui').nudge(10)
 

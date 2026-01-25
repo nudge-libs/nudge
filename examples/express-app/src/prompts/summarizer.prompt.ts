@@ -1,4 +1,4 @@
-import { prompt } from "@nudge/core";
+import { prompt } from "@nudge-ai/core";
 
 // Reusable rules for concise output
 export const conciseRules = prompt("concise-rules", (p) =>

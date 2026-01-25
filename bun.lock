@@ -44,23 +44,23 @@
       "name": "example-express",
       "version": "0.0.1",
       "dependencies": {
-        "@nudge/core": "workspace:*",
+        "@nudge-ai/core": "workspace:*",
         "express": "^4.21.0",
       },
       "devDependencies": {
-        "@nudge/cli": "workspace:*",
+        "@nudge-ai/cli": "workspace:*",
         "@types/express": "^5.0.0",
         "typescript": "^5.7.0",
       },
     },
     "packages/cli": {
-      "name": "@nudge/cli",
-      "version": "0.0.1-beta.1",
+      "name": "@nudge-ai/cli",
+      "version": "0.0.0",
       "bin": {
-        "nudge": "./dist/bin.mjs",
+        "nudge": "./dist/bin.cjs",
       },
       "dependencies": {
-        "@nudge/core": "workspace:*",
+        "@nudge-ai/core": "workspace:*",
         "zod": "^4.3.6",
       },
       "devDependencies": {
@@ -69,8 +69,8 @@
       },
     },
     "packages/core": {
-      "name": "@nudge/core",
-      "version": "0.0.1-beta.1",
+      "name": "@nudge-ai/core",
+      "version": "0.0.0",
       "devDependencies": {
         "tsdown": "^0.19.0",
         "typescript": "^5.7.0",
@@ -276,9 +276,9 @@
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
-    "@nudge/cli": ["@nudge/cli@workspace:packages/cli"],
+    "@nudge-ai/cli": ["@nudge-ai/cli@workspace:packages/cli"],
 
-    "@nudge/core": ["@nudge/core@workspace:packages/core"],
+    "@nudge-ai/core": ["@nudge-ai/core@workspace:packages/core"],
 
     "@orama/orama": ["@orama/orama@3.1.18", "", {}, "sha512-a61ljmRVVyG5MC/698C8/FfFDw5a8LOIvyOLW5fztgUXqUpc1jOfQzOitSCbge657OgXXThmY3Tk8fpiDb4UcA=="],
 
