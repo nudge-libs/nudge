@@ -1,11 +1,12 @@
-import type { Config } from '@react-router/dev/config';
-import fg from 'fast-glob';
-import { createGetUrl, getSlugs } from 'fumadocs-core/source';
+import type { Config } from "@react-router/dev/config";
+import { createGetUrl, getSlugs } from "fumadocs-core/source";
+import { glob } from "node:fs/promises";
 
-const getUrl = createGetUrl('/docs');
+const getUrl = createGetUrl("/docs");
 
 export default {
   ssr: true,
+  basename: "/nudge",
   async prerender({ getStaticPaths }) {
     const paths: string[] = [];
     const excluded: string[] = [];
@@ -14,8 +15,7 @@ export default {
       if (!excluded.includes(path)) paths.push(path);
     }
 
-    const entries = await fg('**/*.mdx', { cwd: 'content/docs' });
-    for (const entry of entries) {
+    for await (const entry of glob("**/*.mdx", { cwd: "content/docs" })) {
       paths.push(getUrl(getSlugs(entry)));
     }
 

@@ -1,11 +1,12 @@
-import { reactRouter } from '@react-router/dev/vite';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import mdx from 'fumadocs-mdx/vite';
-import * as MdxConfig from './source.config';
+import { reactRouter } from "@react-router/dev/vite";
+import tailwindcss from "@tailwindcss/vite";
+import mdx from "fumadocs-mdx/vite";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+import * as MdxConfig from "./source.config";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === "build" ? "/scripting_nodes/" : "/",
   plugins: [
     mdx(MdxConfig),
     tailwindcss(),
@@ -14,4 +15,4 @@ export default defineConfig({
       root: __dirname,
     }),
   ],
-});
+}));
