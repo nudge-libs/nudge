@@ -5,6 +5,6 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: "Nudge",
     },
-    githubUrl: "https://github.com/nicolodaddabbo/nudge",
+    githubUrl: "https://github.com/nudge-libs/nudge",
   };
 }

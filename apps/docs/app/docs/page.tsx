@@ -1,16 +1,21 @@
-import type { Route } from './+types/page';
-import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
-import { source } from '@/lib/source';
-import defaultMdxComponents from 'fumadocs-ui/mdx';
-import browserCollections from 'fumadocs-mdx:collections/browser';
-import { baseOptions } from '@/lib/layout.shared';
-import { useFumadocsLoader } from 'fumadocs-core/source/client';
+import { baseOptions } from "@/lib/layout.shared";
+import { source } from "@/lib/source";
+import { useFumadocsLoader } from "fumadocs-core/source/client";
+import browserCollections from "fumadocs-mdx:collections/browser";
+import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import {
+  DocsBody,
+  DocsDescription,
+  DocsPage,
+  DocsTitle,
+} from "fumadocs-ui/layouts/docs/page";
+import defaultMdxComponents from "fumadocs-ui/mdx";
+import type { Route } from "./+types/page";
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const slugs = params['*'].split('/').filter((v) => v.length > 0);
+  const slugs = (params["*"] ?? "").split("/").filter((v) => v.length > 0);
   const page = source.getPage(slugs);
-  if (!page) throw new Response('Not found', { status: 404 });
+  if (!page) throw new Response("Not found", { status: 404 });
 
   return {
     path: page.path,
@@ -46,7 +51,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
   return (
     <DocsLayout {...baseOptions()} tree={pageTree}>
       {clientLoader.useContent(loaderData.path, {
-        className: '',
+        className: "",
       })}
     </DocsLayout>
   );

@@ -78,7 +78,7 @@ export default function Home() {
             </Link>
             <a
               className="border border-fd-border text-fd-foreground rounded-md font-medium px-5 py-2 text-sm hover:bg-fd-accent transition-colors"
-              href="https://github.com/nicolodaddabbo/nudge"
+              href="https://github.com/nudge-libs/nudge"
               target="_blank"
               rel="noopener noreferrer"
             >
