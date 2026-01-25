@@ -12,9 +12,13 @@
     "dev:example": "bun run --cwd examples/express-app dev",
     "dev:docs": "bun run --cwd apps/docs dev",
     "clean": "bun run --cwd packages/core clean && bun run --cwd packages/cli clean",
-    "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/cli typecheck"
+    "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/cli typecheck",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish --tag beta"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "concurrently": "^9.0.0",
     "ts-node": "^10.9.2",
     "tsdown": "0.19.0",

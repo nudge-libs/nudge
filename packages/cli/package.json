@@ -1,6 +1,6 @@
 {
   "name": "@nudge/cli",
-  "version": "0.0.1",
+  "version": "0.0.1-beta.1",
   "description": "CLI for Nudge - generate type-safe prompt files for AI applications",
   "type": "module",
   "license": "MIT",
