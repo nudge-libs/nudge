@@ -53,5 +53,8 @@
       "import": "./dist/bin.mjs"
     },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
