@@ -3,6 +3,10 @@
   "tag": "beta",
   "initialVersions": {
     "@nudge/core": "0.0.0",
-    "@nudge/cli": "0.0.0"
-  }
+    "@nudge/cli": "0.0.0",
+    "example-express": "0.0.1"
+  },
+  "changesets": [
+    "initial-beta"
+  ]
 }
