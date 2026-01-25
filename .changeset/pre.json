@@ -9,6 +9,7 @@
   "changesets": [
     "fix-cli-dependency",
     "fix-workspace-protocol",
-    "initial-beta"
+    "initial-beta",
+    "zod-peer-dep"
   ]
 }

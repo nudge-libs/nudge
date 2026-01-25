@@ -1,5 +1,11 @@
 # @nudge/cli
 
+## 0.0.1-beta.3
+
+### Patch Changes
+
+- Make zod a peer dependency to avoid version conflicts
+
 ## 0.0.1-beta.2
 
 ### Patch Changes
