@@ -37,12 +37,18 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Update package versions
+      - name: Update package versions and fix workspace references
         run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          
+          # Update core package version
           cd packages/core
-          npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version --allow-same-version
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          
+          # Update cli package version and replace workspace:* with actual version
           cd ../cli
-          npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version --allow-same-version
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          sed -i "s/\"workspace:\*\"/\"$VERSION\"/g" package.json
 
       - name: Publish @nudge/core
         run: |
