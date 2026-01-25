@@ -37,6 +37,15 @@ jobs:
       - name: Type check
         run: bun run typecheck
 
+      - name: Replace workspace protocol before publish
+        run: |
+          # Get core version
+          CORE_VERSION=$(node -p "require('./packages/core/package.json').version")
+          # Replace workspace:* with the actual version in cli package.json
+          sed -i "s/\"workspace:\\*\"/\"^$CORE_VERSION\"/g" packages/cli/package.json
+          echo "Replaced workspace:* with ^$CORE_VERSION"
+          cat packages/cli/package.json | grep "@nudge-ai/core"
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1

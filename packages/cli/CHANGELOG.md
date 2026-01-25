@@ -1,5 +1,11 @@
 # @nudge/cli
 
+## 0.0.1-beta.2
+
+### Patch Changes
+
+- Fix dependency version in published package
+
 ## 0.0.1-beta.1
 
 ### Patch Changes
