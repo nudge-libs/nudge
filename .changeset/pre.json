@@ -3,9 +3,11 @@
   "tag": "beta",
   "initialVersions": {
     "@nudge-ai/core": "0.0.0",
-    "@nudge-ai/cli": "0.0.0"
+    "@nudge-ai/cli": "0.0.0",
+    "example-express": "0.0.1"
   },
   "changesets": [
+    "fix-workspace-protocol",
     "initial-beta"
   ]
 }

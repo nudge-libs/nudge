@@ -1,5 +1,11 @@
 # @nudge/cli
 
+## 0.0.1-beta.1
+
+### Patch Changes
+
+- Fix workspace protocol not being replaced during publish
+
 ## 0.0.1-beta.0
 
 ### Patch Changes
