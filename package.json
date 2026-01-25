@@ -15,7 +15,7 @@
     "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/cli typecheck",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "changeset publish --tag beta"
+    "release": "changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
