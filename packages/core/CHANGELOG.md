@@ -1,5 +1,11 @@
 # @nudge/core
 
+## 0.0.1-beta.1
+
+### Patch Changes
+
+- Add package READMEs with documentation links
+
 ## 0.0.1-beta.0
 
 ### Patch Changes

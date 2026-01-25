@@ -1,5 +1,13 @@
 # @nudge/cli
 
+## 0.0.1-beta.4
+
+### Patch Changes
+
+- Add package READMEs with documentation links
+- Updated dependencies
+  - @nudge-ai/core@0.0.1-beta.1
+
 ## 0.0.1-beta.3
 
 ### Patch Changes
