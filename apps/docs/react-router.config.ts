@@ -6,7 +6,6 @@ const getUrl = createGetUrl("/docs");
 
 export default {
   ssr: true,
-  basename: "/nudge",
   async prerender({ getStaticPaths }) {
     const paths: string[] = [];
     const excluded: string[] = [];
