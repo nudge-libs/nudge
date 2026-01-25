@@ -88,30 +88,30 @@ export default function Home() {
         </div>
 
         {/* Main code example - side by side */}
-        <div className="w-full max-w-5xl mb-20">
-          <div className="grid md:grid-cols-2 gap-4">
+        <div className="w-full max-w-5xl mb-20 min-w-0">
+          <div className="grid md:grid-cols-2 gap-4 min-w-0">
             {/* Builder input */}
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2 mb-2.5 px-0.5">
                 <div className="w-2 h-2 rounded-full bg-fd-primary"></div>
                 <span className="text-sm text-fd-muted-foreground">
                   Your code
                 </span>
               </div>
-              <div className="flex-1 overflow-hidden rounded-xl border border-fd-border [&_pre]:!my-0 [&_pre]:!rounded-xl [&_figure]:!my-0 [&_figure]:h-full">
+              <div className="flex-1 overflow-x-auto rounded-xl border border-fd-border [&_pre]:!my-0 [&_pre]:!rounded-xl [&_figure]:!my-0 [&_figure]:h-full">
                 <DynamicCodeBlock lang="typescript" code={builderCode} />
               </div>
             </div>
 
             {/* Generated output */}
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2 mb-2.5 px-0.5">
                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                 <span className="text-sm text-fd-muted-foreground">
                   Generated prompt
                 </span>
               </div>
-              <div className="flex-1 overflow-hidden rounded-xl border border-fd-border [&_pre]:!my-0 [&_pre]:!rounded-xl [&_figure]:!my-0 [&_figure]:h-full">
+              <div className="flex-1 overflow-x-auto rounded-xl border border-fd-border [&_pre]:!my-0 [&_pre]:!rounded-xl [&_figure]:!my-0 [&_figure]:h-full">
                 <DynamicCodeBlock lang="markdown" code={generatedCode} />
               </div>
             </div>
