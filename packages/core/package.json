@@ -1,7 +1,21 @@
 {
   "name": "@nudge/core",
   "version": "0.0.1",
+  "description": "Core library for Nudge - type-safe prompt builder for AI applications",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nudge-libs/nudge.git",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "prompt",
+    "prompt-engineering",
+    "typescript"
+  ],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -12,6 +26,10 @@
     "tsdown": "^0.19.0",
     "typescript": "^5.7.0"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",

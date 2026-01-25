@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build packages
+        run: bun run build
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Update package versions
+        run: |
+          cd packages/core
+          npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version --allow-same-version
+          cd ../cli
+          npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version --allow-same-version
+
+      - name: Publish @nudge/core
+        run: |
+          cd packages/core
+          npm publish --access public --tag beta
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @nudge/cli
+        run: |
+          cd packages/cli
+          npm publish --access public --tag beta
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          echo "NOTES<<EOF" >> $GITHUB_OUTPUT
+          echo "## What's Changed" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Packages" >> $GITHUB_OUTPUT
+          echo "- \`@nudge/core@${{ steps.version.outputs.VERSION }}\`" >> $GITHUB_OUTPUT
+          echo "- \`@nudge/cli@${{ steps.version.outputs.VERSION }}\`" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Installation" >> $GITHUB_OUTPUT
+          echo "\`\`\`bash" >> $GITHUB_OUTPUT
+          echo "npm install @nudge/core@${{ steps.version.outputs.VERSION }}" >> $GITHUB_OUTPUT
+          echo "npm install -g @nudge/cli@${{ steps.version.outputs.VERSION }}" >> $GITHUB_OUTPUT
+          echo "\`\`\`" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.version.outputs.VERSION }}
+          body: ${{ steps.release_notes.outputs.NOTES }}
+          prerelease: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

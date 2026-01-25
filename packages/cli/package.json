@@ -1,7 +1,23 @@
 {
   "name": "@nudge/cli",
   "version": "0.0.1",
+  "description": "CLI for Nudge - generate type-safe prompt files for AI applications",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nudge-libs/nudge.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "prompt",
+    "prompt-engineering",
+    "typescript",
+    "cli",
+    "codegen"
+  ],
   "bin": {
     "nudge": "./dist/bin.cjs"
   },
@@ -20,6 +36,10 @@
     "tsdown": "^0.19.0",
     "typescript": "^5.7.0"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
