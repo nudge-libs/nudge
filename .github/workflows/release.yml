@@ -41,14 +41,12 @@ jobs:
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           
-          # Update core package version
-          cd packages/core
-          npm version $VERSION --no-git-tag-version --allow-same-version
+          # Update core package version using sed (avoids npm trying to resolve deps)
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" packages/core/package.json
           
           # Update cli package version and replace workspace:* with actual version
-          cd ../cli
-          npm version $VERSION --no-git-tag-version --allow-same-version
-          sed -i "s/\"workspace:\*\"/\"$VERSION\"/g" package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" packages/cli/package.json
+          sed -i "s/\"workspace:\*\"/\"$VERSION\"/g" packages/cli/package.json
 
       - name: Publish @nudge/core
         run: |
