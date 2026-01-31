@@ -2,12 +2,13 @@ import { formatStepForAI, type PromptStep } from "@nudge-ai/core";
 import * as z from "zod/mini";
 
 export type AIConfig = {
-  provider: "openai" | "openrouter";
-  apiKeyEnvVar: string;
+  provider: "openai" | "openrouter" | "local";
+  apiKeyEnvVar?: string;
   model: string;
+  baseUrl?: string; // Required for "local" provider, optional override for others
 };
 
-const PROVIDER_BASE_URLS: Record<AIConfig["provider"], string> = {
+const PROVIDER_BASE_URLS: Record<"openai" | "openrouter", string> = {
   openai: "https://api.openai.com/v1",
   openrouter: "https://openrouter.ai/api/v1",
 };
@@ -68,23 +69,48 @@ export async function processPrompt(
   steps: PromptStep[],
   config: AIConfig,
 ): Promise<string> {
-  const apiKey = process.env[config.apiKeyEnvVar];
-  if (!apiKey) {
+  let baseUrl: string;
+  if (config.baseUrl) {
+    if (!config.baseUrl.startsWith("http://") && !config.baseUrl.startsWith("https://")) {
+      throw new Error(
+        `Invalid baseUrl "${config.baseUrl}": must start with http:// or https://`,
+      );
+    }
+    baseUrl = config.baseUrl;
+  } else if (config.provider === "local") {
     throw new Error(
-      `Missing API key: environment variable "${config.apiKeyEnvVar}" is not set`,
+      'Local provider requires "baseUrl" in config (e.g., "http://localhost:8080/v1")',
+    );
+  } else {
+    baseUrl = PROVIDER_BASE_URLS[config.provider];
+  }
+
+  let apiKey: string | undefined;
+  if (config.apiKeyEnvVar) {
+    apiKey = process.env[config.apiKeyEnvVar];
+    if (!apiKey) {
+      throw new Error(
+        `Missing API key: environment variable "${config.apiKeyEnvVar}" is not set`,
+      );
+    }
+  } else if (config.provider !== "local") {
+    throw new Error(
+      `Missing "apiKeyEnvVar" in config for provider "${config.provider}"`,
     );
   }
 
-  const baseUrl = PROVIDER_BASE_URLS[config.provider];
-
   const stepsDescription = steps.map(formatStepForAI).join("\n\n");
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (apiKey) {
+    headers["Authorization"] = `Bearer ${apiKey}`;
+  }
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({
       model: config.model,
       messages: [

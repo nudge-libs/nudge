@@ -46,6 +46,18 @@ Create `nudge.config.json` in your project root:
 }
 ```
 
+For local models (llama.cpp, Ollama, etc.) with OpenAI-compatible API:
+
+```json
+{
+  "ai": {
+    "provider": "local",
+    "baseUrl": "http://localhost:8080/v1",
+    "model": "qwen2.5-0.5b-instruct-q4_k_m"
+  }
+}
+```
+
 ### 3. Generate
 
 ```bash
@@ -221,13 +233,16 @@ prompt("strict-assistant", (p) =>
 
 ## Config Options
 
+Configuration in `nudge.config.json`:
+
 | Option | Default | Description |
 |--------|---------|-------------|
 | `generatedFile` | `src/prompts.gen.ts` | Output path for generated file |
 | `promptFilenamePattern` | `**/*.prompt.{ts,js}` | Glob pattern for prompt files |
-| `ai.provider` | — | `"openai"` or `"openrouter"` |
-| `ai.apiKeyEnvVar` | — | Environment variable name for API key |
+| `ai.provider` | — | `"openai"`, `"openrouter"`, or `"local"` |
+| `ai.apiKeyEnvVar` | — | Environment variable name for API key (optional for `"local"`) |
 | `ai.model` | — | Model identifier |
+| `ai.baseUrl` | — | Custom API base URL (required for `"local"`, optional override for others) |
 
 ## How It Works
 
