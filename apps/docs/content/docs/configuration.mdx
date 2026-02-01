@@ -19,28 +19,43 @@ Create `nudge.config.json` in your project root, or run `npx @nudge-ai/cli init`
 
 ## Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `generatedFile` | `src/prompts.gen.ts` | Output path for generated file |
-| `promptFilenamePattern` | `**/*.prompt.{ts,js}` | Glob pattern for prompt files |
-| `ai.provider` | — | `"openai"`, `"openrouter"`, or `"local"` |
-| `ai.apiKeyEnvVar` | — | Environment variable name (optional for `"local"`) |
-| `ai.model` | — | Model identifier |
-| `ai.baseUrl` | — | Custom API base URL (required for `"local"`) |
+| Option                  | Default               | Description                                        |
+| ----------------------- | --------------------- | -------------------------------------------------- |
+| `generatedFile`         | `src/prompts.gen.ts`  | Output path for generated file                     |
+| `promptFilenamePattern` | `**/*.prompt.{ts,js}` | Glob pattern for prompt files                      |
+| `ai.provider`           | —                     | `"openai"`, `"openrouter"`, or `"local"`           |
+| `ai.apiKeyEnvVar`       | —                     | Environment variable name (optional for `"local"`) |
+| `ai.model`              | —                     | Model identifier                                   |
+| `ai.baseUrl`            | —                     | Custom API base URL (required for `"local"`)       |
 
 ## Providers
 
 **OpenRouter** — [openrouter.ai](https://openrouter.ai/)
+
 ```json
-{ "ai": { "provider": "openrouter", "apiKeyEnvVar": "OPENROUTER_API_KEY", "model": "anthropic/claude-sonnet-4" } }
+{
+  "ai": {
+    "provider": "openrouter",
+    "apiKeyEnvVar": "OPENROUTER_API_KEY",
+    "model": "anthropic/claude-sonnet-4"
+  }
+}
 ```
 
 **OpenAI** — [platform.openai.com](https://platform.openai.com/)
+
 ```json
-{ "ai": { "provider": "openai", "apiKeyEnvVar": "OPENAI_API_KEY", "model": "gpt-4o" } }
+{
+  "ai": {
+    "provider": "openai",
+    "apiKeyEnvVar": "OPENAI_API_KEY",
+    "model": "gpt-4o"
+  }
+}
 ```
 
 **Local** — For local models (llama.cpp, Ollama, etc.) with OpenAI-compatible API:
+
 ```json
 {
   "ai": {
@@ -54,5 +69,5 @@ Create `nudge.config.json` in your project root, or run `npx @nudge-ai/cli init`
 ## CLI Flags
 
 ```bash
-npx @nudge-ai/cli generate --no-cache  # Force regenerate all prompts
+npx @nudge-ai/cli generate --force  # Force regenerate all prompts
 ```

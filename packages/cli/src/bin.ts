@@ -97,11 +97,11 @@ program
     "generate",
     "Generate type-safe prompt files from your prompt templates",
   )
-  .option("--no-cache", "Skip cache and regenerate all prompts", {
+  .option("--force", "Skip cache and regenerate all prompts", {
     default: false,
   })
   .action(async ({ options }) => {
-    const noCache = options.noCache as boolean;
+    const noCache = options.force as boolean;
     const cwd = process.cwd();
     const configPath = path.join(cwd, "nudge.config.json");
 
