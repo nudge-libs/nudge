@@ -4,7 +4,7 @@ import {
   type BaseStep,
   type StepDefinition,
 } from "./create-step.js";
-import type { PromptBuilderState } from "./types.js";
+import type { PromptBuilderState, PromptTest } from "./types.js";
 
 // ============================================================================
 // Type Helpers
@@ -51,6 +51,12 @@ type PromptBuilder<
     name: Name,
     builderFn: (p: PromptBuilder<Defs>) => PromptBuilder<Defs>,
   ) => PromptBuilder<Defs, Optionals, Variants | Name>;
+  /** Add a test case for evaluating this prompt */
+  test: (
+    input: string,
+    assert: ((output: string) => boolean) | string,
+    description?: string,
+  ) => PromptBuilder<Defs, Optionals, Variants>;
 };
 
 // ============================================================================
@@ -272,6 +278,17 @@ export function createBuilder<
       builderFn(innerBuilder);
       if (!state.variants) state.variants = [];
       state.variants.push({ name, steps: innerState.steps });
+      return builder;
+    };
+
+    // Built-in: test
+    builder.test = (
+      input: string,
+      assert: ((output: string) => boolean) | string,
+      description?: string,
+    ) => {
+      if (!state.tests) state.tests = [];
+      state.tests.push({ input, assert, description });
       return builder;
     };
 

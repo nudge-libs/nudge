@@ -28,6 +28,21 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
       v
         .do("explain the context and background")
         .do("include specific examples where relevant"),
+    )
+    // Tests for evaluating prompt quality
+    .test(
+      "The quick brown fox jumps over the lazy dog. This sentence contains every letter of the alphabet and is commonly used for typing practice.",
+      (output) => output.length < 200,
+      "Should produce concise output",
+    )
+    .test(
+      "Climate change is causing global temperatures to rise by 1.5 degrees Celsius. Scientists report that ice caps are melting at unprecedented rates.",
+      (output) => output.includes("1.5") || output.includes("temperature"),
+      "Should preserve key facts",
+    )
+    .test(
+      "The company reported Q3 earnings of $5.2 billion, up 12% from last year.",
+      "should mention the earnings figure without adding analysis",
     ),
 );
 

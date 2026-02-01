@@ -4,7 +4,7 @@ import { input, select } from "@inquirer/prompts";
 import * as fs from "fs";
 import * as path from "path";
 import { AIConfig } from "./ai.js";
-import { generate } from "./index.js";
+import { evaluate, generate } from "./index.js";
 
 type NudgeConfig = {
   generatedFile?: string;
@@ -124,6 +124,42 @@ program
       });
     } catch (error) {
       console.error("Error generating prompts:", error);
+      process.exit(1);
+    }
+  })
+  .command("eval", "Run tests defined in prompts to evaluate quality")
+  .option("--verbose", "Show detailed test results", {
+    default: false,
+  })
+  .option("--judge", "Use LLM to evaluate string assertions", {
+    default: false,
+  })
+  .action(async ({ options }) => {
+    const verbose = options.verbose as boolean;
+    const judge = options.judge as boolean;
+    const cwd = process.cwd();
+    const configPath = path.join(cwd, "nudge.config.json");
+
+    let config: NudgeConfig = {};
+    if (fs.existsSync(configPath)) {
+      config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    }
+
+    const outputPath = config.generatedFile
+      ? path.join(cwd, config.generatedFile)
+      : path.join(cwd, "src", "prompts.gen.ts");
+
+    const targetDir = path.dirname(outputPath);
+
+    try {
+      await evaluate(targetDir, outputPath, {
+        promptFilenamePattern: config.promptFilenamePattern,
+        aiConfig: config.ai,
+        verbose,
+        judge,
+      });
+    } catch (error) {
+      console.error("Error evaluating prompts:", error);
       process.exit(1);
     }
   });

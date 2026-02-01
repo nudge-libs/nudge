@@ -87,6 +87,7 @@ console.log(summarizerPrompt.toString()); // Returns the AI-generated system pro
 | `.use(prompt)` | Include all steps from another prompt |
 | `.optional(name, builderFn)` | Define a conditional block that can be toggled at runtime |
 | `.variant(name, builderFn)` | Define a named variant with additional steps for A/B testing |
+| `.test(input, assert, desc?)` | Add a test case for evaluating prompt quality |
 
 All methods are chainable:
 
@@ -293,11 +294,67 @@ To create a builder with **only** your custom steps (no base steps):
 const minimalBuilder = createBuilder([tone], { omitBaseSteps: true });
 ```
 
+## Testing Prompts
+
+Add tests to your prompts to evaluate their quality:
+
+```ts
+const summarizer = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .output("concise summary")
+    // Function assertions - run directly
+    .test(
+      "The quick brown fox jumps over the lazy dog.",
+      (output) => output.length < 100,
+      "Output should be concise"
+    )
+    // String assertions - evaluated by LLM judge (with --judge flag)
+    .test(
+      "A long technical document about quantum computing...",
+      "should mention key concepts without jargon",
+      "Simplifies technical content"
+    )
+);
+```
+
+### Test Types
+
+**Function assertions** run directly and are fast:
+```ts
+.test("input", (output) => output.includes("expected"))
+.test("input", (output) => output.length < 500)
+```
+
+**String assertions** describe expected behavior and require `--judge`:
+```ts
+.test("input", "should be polite and professional")
+.test("input", "must not contain personal opinions")
+```
+
 ## CLI Options
+
+### `generate`
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--no-cache` | — | Regenerate all prompts, ignoring the hash cache |
+
+### `eval`
+
+Run tests defined in your prompts to evaluate quality.
+
+```bash
+npx @nudge-ai/cli eval              # Run function assertions only
+npx @nudge-ai/cli eval --judge      # Also evaluate string assertions with LLM
+npx @nudge-ai/cli eval --verbose    # Show detailed test results
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--verbose` | — | Show detailed test results |
+| `--judge` | — | Use LLM to evaluate string assertions |
 
 ## Config Options
 

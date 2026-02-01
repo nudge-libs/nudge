@@ -1,9 +1,15 @@
-import type { BaseStep } from "@nudge-ai/core/internal";
+import type { BaseStep, PromptTest } from "@nudge-ai/core/internal";
 import "dotenv/config";
 import * as fs from "fs";
 import { processPrompt, type AIConfig } from "./ai.js";
 import { hashState, loadExistingPrompts } from "./cache.js";
 import { discoverPrompts, type DiscoveredPrompt } from "./discover.js";
+import {
+  evaluateVariant,
+  formatEvaluationSummary,
+  formatVariantEvaluation,
+  type VariantEvaluation,
+} from "./eval.js";
 
 export type GenerateOptions = {
   promptFilenamePattern?: string;
@@ -154,4 +160,85 @@ registerPrompts(prompts);
   console.log(`Generated ${outputPath} with ${prompts.length} prompt(s)`);
 }
 
-export { discoverPrompts, generate, type DiscoveredPrompt };
+export type EvaluateOptions = {
+  promptFilenamePattern?: string;
+  aiConfig?: AIConfig;
+  verbose?: boolean;
+  judge?: boolean;
+};
+
+async function evaluate(
+  targetDir: string,
+  outputPath: string,
+  options: EvaluateOptions = {},
+): Promise<VariantEvaluation[]> {
+  const pattern = options.promptFilenamePattern ?? "**/*.prompt.{ts,js}";
+  const prompts = await discoverPrompts(targetDir, pattern);
+
+  if (!options.aiConfig) {
+    throw new Error("AI config is required in nudge.config.json");
+  }
+
+  const existingPrompts = loadExistingPrompts(outputPath);
+
+  if (Object.keys(existingPrompts).length === 0) {
+    throw new Error("No generated prompts found. Run 'nudge generate' first.");
+  }
+
+  // Filter to prompts that have tests
+  const promptsWithTests = prompts.filter(
+    (p) => p.state.tests && p.state.tests.length > 0,
+  );
+
+  if (promptsWithTests.length === 0) {
+    console.log("No prompts with tests found.");
+    console.log(
+      '\nAdd tests to your prompts using .test(input, assertion):\n\n  prompt("example", (p) =>\n    p\n      .persona("assistant")\n      .test("Hello", (output) => output.length > 0)\n      .test("Summarize this", "should be concise")\n  )',
+    );
+    return [];
+  }
+
+  console.log(
+    `Evaluating ${promptsWithTests.length} prompt(s) with tests...\n`,
+  );
+
+  const evaluations: VariantEvaluation[] = [];
+
+  for (const prompt of promptsWithTests) {
+    const existing = existingPrompts[prompt.id];
+    if (!existing) {
+      console.log(`  ⚠ "${prompt.id}" not found in generated file, skipping`);
+      continue;
+    }
+
+    const tests = prompt.state.tests as PromptTest[];
+
+    for (const [variantName, text] of Object.entries(existing.variants)) {
+      const evaluation = await evaluateVariant(
+        prompt.id,
+        variantName,
+        text as string,
+        tests,
+        options.aiConfig,
+        options.judge ?? false,
+      );
+      evaluations.push(evaluation);
+
+      console.log(formatVariantEvaluation(evaluation, options.verbose ?? false));
+    }
+  }
+
+  if (evaluations.length > 0) {
+    console.log(formatEvaluationSummary(evaluations));
+  }
+
+  return evaluations;
+}
+
+export {
+  discoverPrompts,
+  evaluate,
+  generate,
+  type DiscoveredPrompt,
+  type VariantEvaluation,
+};
