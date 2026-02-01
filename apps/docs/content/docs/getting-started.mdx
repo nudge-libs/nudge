@@ -28,7 +28,17 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 ## Setup
 
-### 1. Define a prompt
+### 1. Initialize
+
+Run the init command to set up your configuration:
+
+```bash
+npx @nudge-ai/cli init
+```
+
+This will guide you through choosing a provider (OpenAI, OpenRouter, or local) and create a `nudge.config.json` file.
+
+### 2. Define a prompt
 
 Create a file ending in `.prompt.ts`:
 
@@ -49,20 +59,6 @@ export const summarizer = prompt("summarizer", (p) =>
   The CLI only discovers `*.prompt.ts` files.
 </Callout>
 
-### 2. Add config
-
-```json title="nudge.config.json"
-{
-  "ai": {
-    "provider": "openrouter",
-    "apiKeyEnvVar": "OPENROUTER_API_KEY",
-    "model": "anthropic/claude-sonnet-4"
-  }
-}
-```
-
-Set `provider` to `"openrouter"` or `"openai"`, and point `apiKeyEnvVar` to your environment variable. Medium to large models are recommended for best results.
-
 ### 3. Generate
 
 ```bash
@@ -73,8 +69,10 @@ Creates `src/prompts.gen.ts` with your AI-generated system prompts.
 
 ### 4. Use
 
+Import the generated file once at your app's entry point. After that, `.toString()` works on any prompt throughout your codebase.
+
 ```ts title="src/index.ts"
-import "./prompts.gen";
+import "./prompts.gen"; // Import once here
 import { summarizer } from "./summarizer.prompt";
 
 summarizer.toString(); // → AI-generated prompt

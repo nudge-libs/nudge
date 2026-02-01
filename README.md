@@ -10,7 +10,17 @@ npm install @nudge-ai/core @nudge-ai/cli
 
 ## Quick Start
 
-### 1. Create a prompt
+### 1. Initialize
+
+Run the init command to set up your configuration:
+
+```bash
+npx @nudge-ai/cli init
+```
+
+This will guide you through choosing a provider (OpenAI, OpenRouter, or local) and create a `nudge.config.json` file.
+
+### 2. Create a prompt
 
 Prompts must be defined in files matching `*.prompt.ts` (or `.js`). This naming convention is required for the CLI to discover them.
 
@@ -30,32 +40,6 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
     .constraint("keep under 3 paragraphs")
     .example("The quick brown fox...", "A fox jumps over a dog.")
 );
-```
-
-### 2. Configure AI
-
-Create `nudge.config.json` in your project root:
-
-```json
-{
-  "ai": {
-    "provider": "openrouter",
-    "apiKeyEnvVar": "OPENROUTER_API_KEY",
-    "model": "anthropic/claude-sonnet-4"
-  }
-}
-```
-
-For local models (llama.cpp, Ollama, etc.) with OpenAI-compatible API:
-
-```json
-{
-  "ai": {
-    "provider": "local",
-    "baseUrl": "http://localhost:8080/v1",
-    "model": "qwen2.5-0.5b-instruct-q4_k_m"
-  }
-}
 ```
 
 ### 3. Generate

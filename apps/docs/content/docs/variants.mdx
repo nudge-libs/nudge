@@ -1,0 +1,59 @@
+---
+title: Variants
+description: Define multiple prompt variants for A/B testing.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Overview
+
+Define multiple variants of a prompt for A/B testing. Each variant adds additional steps to the base prompt, giving you explicit control over what differs between variants.
+
+```ts
+prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .output("concise summary")
+    // Define variants - each adds steps to the base prompt
+    .variant("short", (v) =>
+      v.constraint("keep the summary to 1-2 sentences maximum")
+    )
+    .variant("detailed", (v) =>
+      v
+        .do("explain the context and background")
+        .do("include specific examples where relevant")
+    )
+);
+```
+
+## How it works
+
+- **Base prompt**: persona + input + output
+- **Variant "short"**: base + constraint (1-2 sentences)
+- **Variant "detailed"**: base + do (context) + do (examples)
+
+Each variant generates a separate prompt via the AI, ensuring meaningful differences.
+
+## Using variants at runtime
+
+```ts
+// Variant names are typed!
+summarizerPrompt.toString({ variant: "short" });
+summarizerPrompt.toString({ variant: "detailed" });
+
+// List available variants
+console.log(summarizerPrompt.variantNames); // ["short", "detailed"]
+```
+
+## A/B testing
+
+```ts
+const variants = summarizerPrompt.variantNames;
+const randomVariant = variants[Math.floor(Math.random() * variants.length)];
+summarizerPrompt.toString({ variant: randomVariant });
+```
+
+<Callout>
+  Variant names are fully typed—TypeScript will autocomplete available options and error on invalid ones.
+</Callout>

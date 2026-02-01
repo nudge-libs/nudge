@@ -5,7 +5,7 @@ description: Configure the CLI with nudge.config.json.
 
 ## Config File
 
-Create `nudge.config.json` in your project root:
+Create `nudge.config.json` in your project root, or run `npx @nudge-ai/cli init` to generate one interactively:
 
 ```json title="nudge.config.json"
 {
@@ -23,20 +23,32 @@ Create `nudge.config.json` in your project root:
 |--------|---------|-------------|
 | `generatedFile` | `src/prompts.gen.ts` | Output path for generated file |
 | `promptFilenamePattern` | `**/*.prompt.{ts,js}` | Glob pattern for prompt files |
-| `ai.provider` | — | `"openai"` or `"openrouter"` |
-| `ai.apiKeyEnvVar` | — | Environment variable name |
+| `ai.provider` | — | `"openai"`, `"openrouter"`, or `"local"` |
+| `ai.apiKeyEnvVar` | — | Environment variable name (optional for `"local"`) |
 | `ai.model` | — | Model identifier |
+| `ai.baseUrl` | — | Custom API base URL (required for `"local"`) |
 
 ## Providers
 
 **OpenRouter** — [openrouter.ai](https://openrouter.ai/)
 ```json
-{ "ai": { "provider": "openrouter", "model": "anthropic/claude-sonnet-4" } }
+{ "ai": { "provider": "openrouter", "apiKeyEnvVar": "OPENROUTER_API_KEY", "model": "anthropic/claude-sonnet-4" } }
 ```
 
 **OpenAI** — [platform.openai.com](https://platform.openai.com/)
 ```json
-{ "ai": { "provider": "openai", "model": "gpt-4o" } }
+{ "ai": { "provider": "openai", "apiKeyEnvVar": "OPENAI_API_KEY", "model": "gpt-4o" } }
+```
+
+**Local** — For local models (llama.cpp, Ollama, etc.) with OpenAI-compatible API:
+```json
+{
+  "ai": {
+    "provider": "local",
+    "baseUrl": "http://localhost:11434/v1",
+    "model": "llama2"
+  }
+}
 ```
 
 ## CLI Flags
