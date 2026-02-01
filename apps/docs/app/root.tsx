@@ -32,11 +32,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        <script
-          defer
-          src="https://cloud.umami.is/script.js"
-          data-website-id="d0b268fe-42dc-4e73-9e8c-9635f7a23ddd"
-        ></script>
       </head>
       <body className="flex flex-col min-h-screen">
         <RootProvider search={{ SearchDialog }}>{children}</RootProvider>
