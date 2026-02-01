@@ -1,5 +1,6 @@
 import { formatStepForAI, type BaseStep } from "@nudge-ai/core/internal";
 import * as z from "zod/mini";
+import { formatAPIError, validateModelResponse } from "./errors.js";
 
 export type AIConfig = {
   provider: "openai" | "openrouter" | "local";
@@ -128,10 +129,26 @@ export async function processPrompt(
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`AI request failed: ${response.status} - ${error}`);
+    const errorText = await response.text();
+    throw new Error(
+      formatAPIError(
+        new Error(`${response.status} - ${errorText}`),
+        { model: config.model, operation: "generating prompt" },
+      ),
+    );
   }
 
-  const data = ChatCompletionResponse.parse(await response.json());
-  return data.choices[0]?.message.content ?? "";
+  let data;
+  try {
+    data = ChatCompletionResponse.parse(await response.json());
+  } catch (e) {
+    throw new Error(
+      formatAPIError(e, { model: config.model, operation: "generating prompt" }),
+    );
+  }
+
+  const content = data.choices[0]?.message.content ?? "";
+  validateModelResponse(content, { model: config.model, operation: "generating prompt" });
+
+  return content;
 }

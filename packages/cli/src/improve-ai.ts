@@ -1,4 +1,5 @@
 import type { AIConfig } from "./ai.js";
+import { formatAPIError } from "./errors.js";
 import * as z from "zod/mini";
 
 export type PromptChange = {
@@ -135,11 +136,24 @@ async function callAI(
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`AI request failed: ${response.status} - ${error}`);
+    const errorText = await response.text();
+    throw new Error(
+      formatAPIError(
+        new Error(`${response.status} - ${errorText}`),
+        { model: config.model, operation: "improving prompt" },
+      ),
+    );
   }
 
-  const data = ChatCompletionResponse.parse(await response.json());
+  let data;
+  try {
+    data = ChatCompletionResponse.parse(await response.json());
+  } catch (e) {
+    throw new Error(
+      formatAPIError(e, { model: config.model, operation: "improving prompt" }),
+    );
+  }
+
   return data.choices[0]?.message.content ?? "";
 }
 
@@ -192,7 +206,8 @@ Respond with ONLY a JSON object containing your analysis and suggested changes.`
     return ImprovementSuggestionSchema.parse(parsed);
   } catch (e) {
     if (verbose) {
-      console.log("\n  Raw AI response:");
+      console.log("\n  ⚠️  Model returned invalid JSON");
+      console.log("  Raw AI response:");
       const lines = response.split("\n");
       for (const line of lines.slice(0, 15)) {
         console.log(`    ${line}`);
@@ -200,11 +215,16 @@ Respond with ONLY a JSON object containing your analysis and suggested changes.`
       if (lines.length > 15) {
         console.log(`    ... (${lines.length - 15} more lines)`);
       }
-      console.log(`\n  Parse error: ${e instanceof Error ? e.message : String(e)}\n`);
+      console.log(`\n  Parse error: ${e instanceof Error ? e.message : String(e)}`);
+    } else {
+      // Show a helpful hint even without verbose
+      console.log("  ⚠️  Model returned invalid JSON. Use --verbose to see the raw response.");
     }
+    console.log("  💡 Tip: The improve command works best with capable models (gpt-4o, claude-3.5-sonnet).\n");
+
     // Return a default suggestion if parsing fails
     return {
-      analysis: "Could not parse improvement suggestions from AI response",
+      analysis: "Model did not return valid JSON. Try using a more capable model.",
       promptChanges: [],
       sourceHints: [],
       confidence: 0,

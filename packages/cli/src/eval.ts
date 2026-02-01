@@ -1,6 +1,7 @@
 import type { PromptTest } from "@nudge-ai/core/internal";
 import * as z from "zod/mini";
 import type { AIConfig } from "./ai.js";
+import { formatAPIError } from "./errors.js";
 
 export type TestResult = {
   input: string;
@@ -100,11 +101,24 @@ async function callAI(
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`AI request failed: ${response.status} - ${error}`);
+    const errorText = await response.text();
+    throw new Error(
+      formatAPIError(
+        new Error(`${response.status} - ${errorText}`),
+        { model: config.model, operation: "running evaluation" },
+      ),
+    );
   }
 
-  const data = ChatCompletionResponse.parse(await response.json());
+  let data;
+  try {
+    data = ChatCompletionResponse.parse(await response.json());
+  } catch (e) {
+    throw new Error(
+      formatAPIError(e, { model: config.model, operation: "running evaluation" }),
+    );
+  }
+
   return data.choices[0]?.message.content ?? "";
 }
 
@@ -135,10 +149,25 @@ ${assertion}`;
     return JudgeResponse.parse(JSON.parse(jsonStr));
   } catch {
     // If parsing fails, try to infer from response
+    const lowerResponse = response.toLowerCase();
     const passed =
-      response.toLowerCase().includes('"passed": true') ||
-      response.toLowerCase().includes("passed: true");
-    return { passed, reason: "Could not parse judge response" };
+      lowerResponse.includes('"passed": true') ||
+      lowerResponse.includes('"passed":true') ||
+      lowerResponse.includes("passed: true");
+    const failed =
+      lowerResponse.includes('"passed": false') ||
+      lowerResponse.includes('"passed":false') ||
+      lowerResponse.includes("passed: false");
+
+    if (!passed && !failed) {
+      // Model didn't return anything we can parse
+      return {
+        passed: false,
+        reason: `Judge model didn't return valid JSON. Consider using a more capable model. Response: "${response.slice(0, 100)}${response.length > 100 ? "..." : ""}"`,
+      };
+    }
+
+    return { passed, reason: "Inferred from non-JSON response" };
   }
 }
 
