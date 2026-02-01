@@ -29,6 +29,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@caporal/core": "^2.0.7",
     "@nudge-ai/core": "workspace:*"
   },
   "peerDependencies": {
