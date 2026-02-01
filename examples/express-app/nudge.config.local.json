@@ -1,0 +1,7 @@
+{
+  "ai": {
+    "provider": "local",
+    "baseUrl": "http://localhost:8080/v1",
+    "model": "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+  }
+}

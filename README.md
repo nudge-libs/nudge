@@ -102,6 +102,7 @@ console.log(summarizerPrompt.toString()); // Returns the AI-generated system pro
 | `.example(input, output)` | An input/output example to demonstrate behavior |
 | `.use(prompt)` | Include all steps from another prompt |
 | `.optional(name, builderFn)` | Define a conditional block that can be toggled at runtime |
+| `.variant(name, builderFn)` | Define a named variant with additional steps for A/B testing |
 
 All methods are chainable:
 
@@ -230,6 +231,57 @@ prompt("strict-assistant", (p) =>
     .constraint("respond in English", { nudge: 2 })
 );
 ```
+
+## Variants (A/B Testing)
+
+Define multiple variants of a prompt for A/B testing. Each variant adds additional steps to the base prompt, giving you explicit control over what differs between variants.
+
+```ts
+prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .output("concise summary")
+    // Define variants - each adds steps to the base prompt
+    .variant("short", (v) =>
+      v.constraint("keep the summary to 1-2 sentences maximum")
+    )
+    .variant("detailed", (v) =>
+      v
+        .do("explain the context and background")
+        .do("include specific examples where relevant")
+    )
+);
+```
+
+**How it works:**
+- Base prompt: persona + input + output
+- Variant "short": base + constraint (1-2 sentences)
+- Variant "detailed": base + do (context) + do (examples)
+
+Each variant generates a separate prompt via the AI, ensuring meaningful differences.
+
+### Using variants at runtime
+
+```ts
+// Variant names are typed!
+summarizerPrompt.toString({ variant: "short" });
+summarizerPrompt.toString({ variant: "detailed" });
+
+// List available variants
+console.log(summarizerPrompt.variantNames); // ["short", "detailed"]
+
+// A/B test with random selection
+const variants = summarizerPrompt.variantNames;
+const randomVariant = variants[Math.floor(Math.random() * variants.length)];
+summarizerPrompt.toString({ variant: randomVariant });
+```
+
+## CLI Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--no-cache` | — | Regenerate all prompts, ignoring the hash cache |
 
 ## Config Options
 

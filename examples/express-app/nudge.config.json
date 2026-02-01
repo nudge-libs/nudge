@@ -1,7 +1,7 @@
 {
-    "ai": {
-        "provider": "openrouter",
-        "apiKeyEnvVar": "OPENROUTER_API_KEY",
-        "model": "anthropic/claude-haiku-4.5"
-    }
+  "ai": {
+    "provider": "openrouter",
+    "apiKeyEnvVar": "OPENROUTER_API_KEY",
+    "model": "tngtech/deepseek-r1t2-chimera:free"
   }
+}

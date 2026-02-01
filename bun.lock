@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "nudge",
@@ -55,22 +56,25 @@
     },
     "packages/cli": {
       "name": "@nudge-ai/cli",
-      "version": "0.0.0",
+      "version": "0.0.1-beta.4",
       "bin": {
         "nudge": "./dist/bin.cjs",
       },
       "dependencies": {
         "@nudge-ai/core": "workspace:*",
-        "zod": "^4.3.6",
       },
       "devDependencies": {
         "tsdown": "^0.19.0",
         "typescript": "^5.7.0",
+        "zod": "^4.3.6",
+      },
+      "peerDependencies": {
+        "zod": "^3.23.0 || ^4.0.0",
       },
     },
     "packages/core": {
       "name": "@nudge-ai/core",
-      "version": "0.0.0",
+      "version": "0.0.1-beta.1",
       "devDependencies": {
         "tsdown": "^0.19.0",
         "typescript": "^5.7.0",

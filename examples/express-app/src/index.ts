@@ -1,6 +1,6 @@
 import express from "express";
 import "./prompts.gen";
-import { greeterPrompt, testPrompt } from "./prompts/summarizer.prompt";
+import { greeterPrompt, summarizerPrompt, testPrompt } from "./prompts/summarizer.prompt";
 
 const app = express();
 app.use(express.json());
@@ -18,6 +18,15 @@ app.get("/", (req, res) => {
       topic: "TypeScript",
       introduction: true,
     }),
+  );
+  // Test variants
+  console.log("---");
+  console.log(
+    summarizerPrompt.toString({ variant: "short" }),
+  );
+  console.log("---");
+  console.log(
+    summarizerPrompt.toString({ variant: "detailed" }),
   );
   res.json({
     message: "Example Express App",

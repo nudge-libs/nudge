@@ -5,7 +5,7 @@ export type AIConfig = {
   provider: "openai" | "openrouter" | "local";
   apiKeyEnvVar?: string;
   model: string;
-  baseUrl?: string; // Required for "local" provider, optional override for others
+  baseUrl?: string;
 };
 
 const PROVIDER_BASE_URLS: Record<"openai" | "openrouter", string> = {
@@ -57,7 +57,7 @@ Example: "You must keep responses concise. Under no circumstances should you pro
 Bad example (don't do this):
 "## Do
 - Keep responses brief
-## Don't  
+## Don't
 - Use jargon"
 
 Good example (do this instead):
@@ -85,6 +85,7 @@ export async function processPrompt(
     baseUrl = PROVIDER_BASE_URLS[config.provider];
   }
 
+  // API key is optional for local provider
   let apiKey: string | undefined;
   if (config.apiKeyEnvVar) {
     apiKey = process.env[config.apiKeyEnvVar];
@@ -99,8 +100,6 @@ export async function processPrompt(
     );
   }
 
-  const stepsDescription = steps.map(formatStepForAI).join("\n\n");
-
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -108,16 +107,15 @@ export async function processPrompt(
     headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
+  const stepsDescription = steps.map(formatStepForAI).join("\n\n");
+
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers,
     body: JSON.stringify({
       model: config.model,
       messages: [
-        {
-          role: "system",
-          content: SYSTEM_PROMPT,
-        },
+        { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
           content: `Generate a system prompt from these building blocks:\n\n${stepsDescription}`,
@@ -132,6 +130,5 @@ export async function processPrompt(
   }
 
   const data = ChatCompletionResponse.parse(await response.json());
-
   return data.choices[0]?.message.content ?? "";
 }

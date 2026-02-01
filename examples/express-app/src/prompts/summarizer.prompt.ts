@@ -19,6 +19,15 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
     .dont("add opinions or interpretations")
     .optional("json", (p) =>
       p.output("valid JSON object").constraint("must be parseable JSON"),
+    )
+    // A/B testing variants - each adds different constraints to the base prompt
+    .variant("short", (v) =>
+      v.constraint("keep the summary to 1-2 sentences maximum"),
+    )
+    .variant("detailed", (v) =>
+      v
+        .do("explain the context and background")
+        .do("include specific examples where relevant"),
     ),
 );
 
