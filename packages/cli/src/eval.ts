@@ -2,6 +2,7 @@ import type { PromptTest } from "@nudge-ai/core/internal";
 import * as z from "zod/mini";
 import type { AIConfig } from "./ai.js";
 import { formatAPIError } from "./errors.js";
+import { createSpinner, createProgress, clearStatusLine } from "./status.js";
 
 export type TestResult = {
   input: string;
@@ -228,12 +229,26 @@ export async function evaluateVariant(
   tests: PromptTest[],
   config: AIConfig,
   useJudge: boolean,
+  options?: { silent?: boolean },
 ): Promise<VariantEvaluation> {
   const results: TestResult[] = [];
+  const silent = options?.silent ?? false;
 
-  for (const test of tests) {
+  const variantLabel = variantName === "default" ? promptId : `${promptId} [${variantName}]`;
+  const progress = !silent ? createProgress({ total: tests.length, label: `Testing "${variantLabel}"` }) : null;
+
+  for (let i = 0; i < tests.length; i++) {
+    const test = tests[i];
+    const testLabel = test.description || `test ${i + 1}`;
+    progress?.update(i + 1, testLabel);
+
     const result = await runTest(systemPrompt, test, config, useJudge);
     results.push(result);
+  }
+
+  progress?.done();
+  if (!silent) {
+    clearStatusLine();
   }
 
   const passed = results.filter((r) => r.passed).length;

@@ -1,6 +1,7 @@
 import { formatStepForAI, type BaseStep } from "@nudge-ai/core/internal";
 import * as z from "zod/mini";
 import { formatAPIError, validateModelResponse } from "./errors.js";
+import { createSpinner } from "./status.js";
 
 export type AIConfig = {
   provider: "openai" | "openrouter" | "local";
@@ -69,6 +70,7 @@ Output ONLY the final system prompt text. Do not include any explanations, pream
 export async function processPrompt(
   steps: BaseStep[],
   config: AIConfig,
+  options?: { silent?: boolean },
 ): Promise<string> {
   let baseUrl: string;
   if (config.baseUrl) {
@@ -112,24 +114,34 @@ export async function processPrompt(
   }
 
   const stepsDescription = steps.map(formatStepForAI).join("\n\n");
+  const silent = options?.silent ?? false;
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      model: config.model,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `Generate a system prompt from these building blocks:\n\n${stepsDescription}`,
-        },
-      ],
-    }),
-  });
+  const spinner = !silent ? createSpinner(`Synthesizing prompt with ${config.model}...`) : null;
+
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: config.model,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Generate a system prompt from these building blocks:\n\n${stepsDescription}`,
+          },
+        ],
+      }),
+    });
+  } catch (e) {
+    spinner?.fail(`Failed to connect to ${config.provider}`);
+    throw e;
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
+    spinner?.fail(`API error (${response.status})`);
     throw new Error(
       formatAPIError(
         new Error(`${response.status} - ${errorText}`),
@@ -142,10 +154,13 @@ export async function processPrompt(
   try {
     data = ChatCompletionResponse.parse(await response.json());
   } catch (e) {
+    spinner?.fail("Invalid response from API");
     throw new Error(
       formatAPIError(e, { model: config.model, operation: "generating prompt" }),
     );
   }
+
+  spinner?.stop();
 
   const content = data.choices[0]?.message.content ?? "";
   validateModelResponse(content, { model: config.model, operation: "generating prompt" });

@@ -12,6 +12,7 @@ import {
   type PromptChange,
   type SourceHint,
 } from "./improve-ai.js";
+import { createSpinner } from "./status.js";
 
 export type ImproveOptions = {
   promptIds?: string[]; // Filter to specific prompts
@@ -131,7 +132,9 @@ async function improveVariant(
 ): Promise<ImprovementResult> {
   let prompt = currentPrompt;
   const allSourceHints: SourceHint[] = [];
+  const variantLabel = variantName === "default" ? promptId : `${promptId} [${variantName}]`;
 
+  const initialSpinner = createSpinner(`Running initial tests for "${variantLabel}"...`);
   let evaluation = await evaluateVariant(
     promptId,
     variantName,
@@ -139,7 +142,9 @@ async function improveVariant(
     tests,
     config,
     options.judge,
+    { silent: true },
   );
+  initialSpinner.stop();
 
   const initialFailures = evaluation.failed;
 
@@ -191,7 +196,9 @@ async function improveVariant(
     });
 
     // Request improvement from AI
+    const aiSpinner = createSpinner(`Analyzing failures and generating improvements...`);
     const suggestion = await requestImprovement(prompt, failingTestInfos, config, options.verbose);
+    aiSpinner.stop();
     allSourceHints.push(...suggestion.sourceHints);
 
     if (options.verbose) {
@@ -226,7 +233,7 @@ async function improveVariant(
     updatePromptsGenFile(outputPath, promptId, variantName, prompt);
 
     // Re-evaluate
-    console.log("Re-running tests...");
+    const rerunSpinner = createSpinner(`Re-running ${tests.length} test(s)...`);
     evaluation = await evaluateVariant(
       promptId,
       variantName,
@@ -234,7 +241,9 @@ async function improveVariant(
       tests,
       config,
       options.judge,
+      { silent: true },
     );
+    rerunSpinner.stop();
 
     // Print test results
     for (const result of evaluation.results) {

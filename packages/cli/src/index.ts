@@ -15,6 +15,7 @@ import {
   type ImproveOptions,
   type ImprovementResult,
 } from "./improve.js";
+import { createSpinner } from "./status.js";
 
 export type GenerateOptions = {
   promptFilenamePattern?: string;
@@ -53,77 +54,80 @@ async function generate(
 
   const existingPrompts = loadExistingPrompts(outputPath);
 
-  console.log(`Processing ${prompts.length} prompt(s)...`);
+  console.log(`Processing ${prompts.length} prompt(s)...\n`);
 
-  const results = await Promise.all(
-    prompts.map(async (prompt) => {
-      const hash = hashState(prompt.state);
-      const existing = existingPrompts[prompt.id];
+  const results = [];
 
-      let variants: Record<string, string>;
+  for (const prompt of prompts) {
+    const hash = hashState(prompt.state);
+    const existing = existingPrompts[prompt.id];
 
-      if (!options.noCache && existing && existing.hash === hash) {
-        console.log(`  ✓ "${prompt.id}" unchanged (cached)`);
-        variants = existing.variants as Record<string, string>;
+    let variants: Record<string, string>;
+
+    if (!options.noCache && existing && existing.hash === hash) {
+      console.log(`  ✓ "${prompt.id}" (cached)`);
+      variants = existing.variants as Record<string, string>;
+    } else {
+      const definedVariants = prompt.state.variants ?? [];
+
+      if (definedVariants.length === 0) {
+        // No variants defined - generate single "default" prompt
+        const spinner = createSpinner(`"${prompt.id}" generating...`);
+        const text = await processPrompt(
+          prompt.state.steps,
+          options.aiConfig!,
+          { silent: true },
+        );
+        spinner.succeed(`"${prompt.id}" generated`);
+        variants = { default: text };
       } else {
-        const definedVariants = prompt.state.variants ?? [];
-
-        if (definedVariants.length === 0) {
-          // No variants defined - generate single "default" prompt
-          console.log(`  → "${prompt.id}" processing with AI...`);
+        // Generate one prompt per variant (base steps + variant steps)
+        const spinner = createSpinner(`"${prompt.id}" generating ${definedVariants.length} variant(s)...`);
+        const variantEntries: [string, string][] = [];
+        for (let i = 0; i < definedVariants.length; i++) {
+          const v = definedVariants[i];
+          spinner.update(`"${prompt.id}" generating variant "${v.name}" (${i + 1}/${definedVariants.length})...`);
+          const combinedSteps: BaseStep[] = [
+            ...prompt.state.steps,
+            ...v.steps,
+          ];
           const text = await processPrompt(
-            prompt.state.steps,
+            combinedSteps,
             options.aiConfig!,
+            { silent: true },
           );
-          variants = { default: text };
-        } else {
-          // Generate one prompt per variant (base steps + variant steps)
-          console.log(
-            `  → "${prompt.id}" generating ${definedVariants.length} variant(s)...`,
-          );
-          const variantEntries = await Promise.all(
-            definedVariants.map(async (v) => {
-              const combinedSteps: BaseStep[] = [
-                ...prompt.state.steps,
-                ...v.steps,
-              ];
-              const text = await processPrompt(
-                combinedSteps,
-                options.aiConfig!,
-              );
-              return [v.name, text] as const;
-            }),
-          );
-          variants = Object.fromEntries(variantEntries);
+          variantEntries.push([v.name, text]);
         }
+        spinner.succeed(`"${prompt.id}" generated ${definedVariants.length} variant(s)`);
+        variants = Object.fromEntries(variantEntries);
       }
+    }
 
-      const variables = extractVariables(variants);
+    const variables = extractVariables(variants);
 
-      const variantNames = Object.keys(variants).filter((k) => k !== "default");
+    const variantNames = Object.keys(variants).filter((k) => k !== "default");
 
-      const variantEntries = Object.entries(variants)
-        .map(([name, text]) => {
-          const escaped = escapeForTemplateLiteral(text);
-          return `      ${JSON.stringify(name)}: \`${escaped}\``;
-        })
-        .join(",\n");
+    const variantEntriesStr = Object.entries(variants)
+      .map(([name, text]) => {
+        const escaped = escapeForTemplateLiteral(text);
+        return `      ${JSON.stringify(name)}: \`${escaped}\``;
+      })
+      .join(",\n");
 
-      return {
-        id: prompt.id,
-        entry: `  ${JSON.stringify(prompt.id)}: {\n    variants: {\n${variantEntries},\n    },\n    hash: ${JSON.stringify(hash)},\n  }`,
-        registry: `    ${JSON.stringify(prompt.id)}: true;`,
-        variables:
-          variables.length > 0
-            ? `    ${JSON.stringify(prompt.id)}: ${variables.map((v) => JSON.stringify(v)).join(" | ")};`
-            : null,
-        variantNames:
-          variantNames.length > 0
-            ? `    ${JSON.stringify(prompt.id)}: ${variantNames.map((v) => JSON.stringify(v)).join(" | ")};`
-            : null,
-      };
-    }),
-  );
+    results.push({
+      id: prompt.id,
+      entry: `  ${JSON.stringify(prompt.id)}: {\n    variants: {\n${variantEntriesStr},\n    },\n    hash: ${JSON.stringify(hash)},\n  }`,
+      registry: `    ${JSON.stringify(prompt.id)}: true;`,
+      variables:
+        variables.length > 0
+          ? `    ${JSON.stringify(prompt.id)}: ${variables.map((v) => JSON.stringify(v)).join(" | ")};`
+          : null,
+      variantNames:
+        variantNames.length > 0
+          ? `    ${JSON.stringify(prompt.id)}: ${variantNames.map((v) => JSON.stringify(v)).join(" | ")};`
+          : null,
+    });
+  }
 
   const promptEntries = results.map((r) => r.entry);
   const registryEntries = results.map((r) => r.registry);
@@ -162,7 +166,7 @@ registerPrompts(prompts);
 
   // Write TypeScript file
   fs.writeFileSync(outputPath, code, "utf-8");
-  console.log(`Generated ${outputPath} with ${prompts.length} prompt(s)`);
+  console.log(`\n✓ Generated ${outputPath} with ${prompts.length} prompt(s)`);
 }
 
 export type EvaluateOptions = {
@@ -203,8 +207,13 @@ async function evaluate(
     return [];
   }
 
+  const totalVariants = promptsWithTests.reduce((sum, p) => {
+    const existing = existingPrompts[p.id];
+    return sum + (existing ? Object.keys(existing.variants).length : 0);
+  }, 0);
+
   console.log(
-    `Evaluating ${promptsWithTests.length} prompt(s) with tests...\n`,
+    `Evaluating ${promptsWithTests.length} prompt(s) with ${totalVariants} variant(s)...\n`,
   );
 
   const evaluations: VariantEvaluation[] = [];
