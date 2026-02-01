@@ -134,7 +134,7 @@ async function improveVariant(
   const allSourceHints: SourceHint[] = [];
   const variantLabel = variantName === "default" ? promptId : `${promptId} [${variantName}]`;
 
-  const initialSpinner = createSpinner(`Running initial tests for "${variantLabel}"...`);
+  const initialSpinner = createSpinner(`"${variantLabel}" running ${tests.length} test(s)...`);
   let evaluation = await evaluateVariant(
     promptId,
     variantName,
@@ -144,11 +144,11 @@ async function improveVariant(
     options.judge,
     { silent: true },
   );
-  initialSpinner.stop();
 
   const initialFailures = evaluation.failed;
 
   if (initialFailures === 0) {
+    initialSpinner.succeed(`"${variantLabel}" all tests passing`);
     return {
       promptId,
       variantName,
@@ -160,27 +160,30 @@ async function improveVariant(
     };
   }
 
+  initialSpinner.stop();
+
   let previousResults = evaluation.results;
 
   for (let i = 0; i < options.maxIterations; i++) {
     const failingResults = evaluation.results.filter((r) => !r.passed);
 
-    console.log(`\nIteration ${i + 1}/${options.maxIterations} for "${promptId}"${variantName !== "default" ? ` [${variantName}]` : ""}`);
-    console.log("");
+    console.log(`\nIteration ${i + 1}/${options.maxIterations} for "${variantLabel}"`);
+    console.log(`${failingResults.length} failing test(s):\n`);
 
     // Print failing tests
-    console.log("Failing Test(s):");
     for (const result of failingResults) {
       const test = tests.find((t) => t.input === result.input);
       console.log(`  Input: "${result.input.slice(0, 60)}${result.input.length > 60 ? "..." : ""}"`);
       if (test) {
         console.log(`  Expected: ${getAssertionString(test)}`);
       }
-      console.log(`  Actual: "${result.output.slice(0, 60)}${result.output.length > 60 ? "..." : ""}"`);
+      console.log(`  Got: "${result.output.slice(0, 60)}${result.output.length > 60 ? "..." : ""}"`);
       if (result.reason) {
         console.log(`  Reason: ${result.reason}`);
       }
-      console.log("");
+      if (failingResults.indexOf(result) < failingResults.length - 1) {
+        console.log(""); // Only add blank line between tests, not after last one
+      }
     }
 
     // Build failing test info for AI
@@ -202,13 +205,12 @@ async function improveVariant(
     allSourceHints.push(...suggestion.sourceHints);
 
     if (options.verbose) {
-      console.log("Analysis:");
+      console.log("\nAnalysis:");
       console.log(`  ${suggestion.analysis}`);
-      console.log("");
     }
 
     if (suggestion.promptChanges.length === 0) {
-      console.log("No prompt changes suggested.");
+      console.log("\nNo prompt changes suggested.");
       return {
         promptId,
         variantName,
@@ -220,11 +222,10 @@ async function improveVariant(
       };
     }
 
-    console.log("Suggested Prompt Changes:");
+    console.log("\nSuggested Changes:");
     for (const change of suggestion.promptChanges) {
       console.log(formatPromptChange(change));
     }
-    console.log("");
 
     // Apply changes
     prompt = applyPromptChanges(prompt, suggestion.promptChanges);
@@ -246,11 +247,12 @@ async function improveVariant(
     rerunSpinner.stop();
 
     // Print test results
+    console.log("\nResults:");
     for (const result of evaluation.results) {
       const prevResult = previousResults.find((r) => r.input === result.input);
       const wasFailingNowPassing = prevResult && !prevResult.passed && result.passed;
       const status = result.passed ? "✓" : "✗";
-      const suffix = wasFailingNowPassing ? " (was failing)" : "";
+      const suffix = wasFailingNowPassing ? " (fixed)" : "";
       console.log(`  ${status} ${result.description || `Test: ${result.input.slice(0, 40)}...`}${suffix}`);
     }
 
@@ -330,14 +332,13 @@ export async function improve(
   }
 
   console.log("Analyzing prompts with failing tests...\n");
-  console.log("━".repeat(60));
 
   const results: ImprovementResult[] = [];
 
   for (const prompt of promptsWithTests) {
     const existing = existingPrompts[prompt.id];
     if (!existing) {
-      console.log(`\n⚠ "${prompt.id}" not found in generated file, skipping`);
+      console.log(`⚠ "${prompt.id}" not found in generated file, skipping`);
       continue;
     }
 
@@ -361,10 +362,10 @@ export async function improve(
       if (sourceHintsOutput) {
         console.log(sourceHintsOutput);
       }
-
-      console.log("\n" + "━".repeat(60));
     }
   }
+
+  console.log("\n" + "━".repeat(60));
 
   // Print summary
   console.log("\nSummary:");
