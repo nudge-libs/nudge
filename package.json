@@ -1,11 +1,15 @@
 {
   "name": "nudge",
+  "devDependencies": {
+    "@changesets/cli": "^2.29.8",
+    "concurrently": "^9.0.0",
+    "dotenv": "^17.2.3",
+    "fast-glob": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "tsdown": "0.19.0",
+    "typescript": "^5.7.0"
+  },
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "examples/*",
-    "apps/*"
-  ],
   "scripts": {
     "build": "bun run --cwd packages/core build && bun run --cwd packages/cli build",
     "dev": "bun run build && concurrently -n core,cli,example -c blue,green,magenta \"bun run --cwd packages/core dev\" \"bun run --cwd packages/cli dev\" \"bun run --cwd examples/express-app dev\"",
@@ -17,11 +21,9 @@
     "version": "changeset version",
     "release": "changeset publish"
   },
-  "devDependencies": {
-    "@changesets/cli": "^2.29.8",
-    "concurrently": "^9.0.0",
-    "ts-node": "^10.9.2",
-    "tsdown": "0.19.0",
-    "typescript": "^5.7.0"
-  }
+  "workspaces": [
+    "packages/*",
+    "examples/*",
+    "apps/*"
+  ]
 }
