@@ -1,4 +1,7 @@
-import type { GeneratedPrompt, PromptBuilderState } from "@nudge-ai/core";
+import type {
+  GeneratedPrompt,
+  PromptBuilderState,
+} from "@nudge-ai/core/internal";
 import crypto from "crypto";
 import * as fs from "fs";
 

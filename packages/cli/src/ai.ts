@@ -1,4 +1,4 @@
-import { formatStepForAI, type PromptStep } from "@nudge-ai/core";
+import { formatStepForAI, type BaseStep } from "@nudge-ai/core/internal";
 import * as z from "zod/mini";
 
 export type AIConfig = {
@@ -66,12 +66,15 @@ Good example (do this instead):
 Output ONLY the final system prompt text. Do not include any explanations, preamble, or meta-commentary.`;
 
 export async function processPrompt(
-  steps: PromptStep[],
+  steps: BaseStep[],
   config: AIConfig,
 ): Promise<string> {
   let baseUrl: string;
   if (config.baseUrl) {
-    if (!config.baseUrl.startsWith("http://") && !config.baseUrl.startsWith("https://")) {
+    if (
+      !config.baseUrl.startsWith("http://") &&
+      !config.baseUrl.startsWith("https://")
+    ) {
       throw new Error(
         `Invalid baseUrl "${config.baseUrl}": must start with http:// or https://`,
       );

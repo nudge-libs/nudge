@@ -1,4 +1,5 @@
-import type { Prompt, PromptBuilderState } from "@nudge-ai/core";
+import type { Prompt } from "@nudge-ai/core";
+import type { PromptBuilderState } from "@nudge-ai/core/internal";
 import fg from "fast-glob";
 import { pathToFileURL } from "url";
 

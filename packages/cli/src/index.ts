@@ -1,6 +1,6 @@
+import type { BaseStep } from "@nudge-ai/core/internal";
 import "dotenv/config";
 import * as fs from "fs";
-import type { PromptStep } from "@nudge-ai/core";
 import { processPrompt, type AIConfig } from "./ai.js";
 import { hashState, loadExistingPrompts } from "./cache.js";
 import { discoverPrompts, type DiscoveredPrompt } from "./discover.js";
@@ -60,17 +60,28 @@ async function generate(
         if (definedVariants.length === 0) {
           // No variants defined - generate single "default" prompt
           console.log(`  → "${prompt.id}" processing with AI...`);
-          const text = await processPrompt(prompt.state.steps, options.aiConfig!);
+          const text = await processPrompt(
+            prompt.state.steps,
+            options.aiConfig!,
+          );
           variants = { default: text };
         } else {
           // Generate one prompt per variant (base steps + variant steps)
-          console.log(`  → "${prompt.id}" generating ${definedVariants.length} variant(s)...`);
+          console.log(
+            `  → "${prompt.id}" generating ${definedVariants.length} variant(s)...`,
+          );
           const variantEntries = await Promise.all(
             definedVariants.map(async (v) => {
-              const combinedSteps: PromptStep[] = [...prompt.state.steps, ...v.steps];
-              const text = await processPrompt(combinedSteps, options.aiConfig!);
+              const combinedSteps: BaseStep[] = [
+                ...prompt.state.steps,
+                ...v.steps,
+              ];
+              const text = await processPrompt(
+                combinedSteps,
+                options.aiConfig!,
+              );
               return [v.name, text] as const;
-            })
+            }),
           );
           variants = Object.fromEntries(variantEntries);
         }

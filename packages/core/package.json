@@ -38,6 +38,10 @@
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     },
+    "./internal": {
+      "require": "./dist/internal.cjs",
+      "import": "./dist/internal.mjs"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
