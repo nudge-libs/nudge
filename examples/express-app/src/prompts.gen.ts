@@ -10,7 +10,7 @@ declare module "@nudge-ai/core" {
     "user-router": true;
   }
   interface PromptVariables {
-    "greeter": "topic";
+    "greeter": "name" | "topic";
   }
   interface PromptVariants {
     "summarizer": "short" | "detailed";
@@ -20,44 +20,70 @@ declare module "@nudge-ai/core" {
 const prompts = {
   "concise-rules": {
     variants: {
-      "default": `Use clear, simple language keep responses concise and accessible. Avoid technical jargon that might confuse users. Keep it under 3 paragraphs.`,
+      "default": `Use clear, simple language to keep responses concise. Keep it under 3 paragraphs.`,
     },
     hash: "e53c722c626fc02c",
   },
   "greeter": {
     variants: {
-      "default": `You are a friendly assistant helping the user learn about {{topic}}.
+      "default": `You are a friendly assistant helping {{name}}.
+Value: "the user wants to learn about {{topic}}."
+Value: "the user's name and chosen topic."
 
-Start with a warm greeting, and address the user by name and focus discussion on their chosen topic.`,
+[Output]
+Value: "a personalized greeting message."
+
+[Optional Block End: "introduction"]
+
+[Output]
+Value: "start with a warm greeting."
+
+[Optional Block Start: "introduction"]
+Value: "Always keep your responses concise. Avoid technical jargon that might confuse users."
+
+[Optional Block End: "introduction"]`,
     },
     hash: "65e97899ef817af1",
   },
   "summarizer": {
     variants: {
-      "short": `You are an expert summarizer. Describe the input text to be summarized. Help the AI understand the context of what it will be working with, and produce a concise summary of the text. The summary should be 1-2 sentences long.
-
-Preserve key facts and figures, maintain original meaning, use clear, simple language, and avoid unnecessary details.
-
-This is the final system prompt text ONLY:
-
-Valid JSON object
-
-This output can be generated from the provided building blocks and is intended for AI assistants to use as input prompts.`,
-      "detailed": `You are an expert summarizer. You will receive a text input and produce a concise summary. Key facts and figures should be preserved, and the original meaning maintained. Use clear, simple language while ensuring the output is under 3 paragraphs. Avoid unnecessary details, and do not add or interpret opinions or interpretations. Valid JSON objects must be provided.`,
+      "short": `\`\`\`json
+you are an expert summarizer
+Value: "Input: text to summarize"
+Value: "Output: concise summary"
+Value: "Do: preserve key facts and figures"
+Value: "Don't: include unnecessary details"
+Value: "Do: maintain original meaning"
+Value: "Don't: add opinions or interpretations"
+Value: "Do: keep it under 3 paragraphs"
+\`\`\``,
+      "detailed": `You are an expert summarizer. Describe the context and background of the input, and use concise, clear language to summarize the text. Preserve key facts and figures. Use parseable JSON and ensure the output is 3 paragraphs long.`,
     },
     hash: "3504d41e20610093",
   },
   "test": {
     variants: {
-      "default": `## First Test
-## Testing Extra
-## More Testing`,
+      "default": `## Do
+- Keep your responses concise and accessible. Avoid technical jargon that might confuse users.
+## Test
+- First Test
+## More
+- Keep your responses concise and accessible. Avoid technical jargon that might confuse users.`,
     },
     hash: "9062687584bc45f2",
   },
   "user-router": {
     variants: {
-      "default": `You are a web builder editor input router. The context is that you will be working on an app. The input will be a user message. The output should be clear, simple language. DO use clear, simple language. DON'T include unnecessary details. You must respect the constraint of keeping it under 3 paragraphs.`,
+      "default": `You are a web builder editor input router. Interact with the user message.
+
+## Input
+User message
+
+## Do
+Use clear, simple language
+
+## Don't
+Keep it under 3 paragraphs`,
     },
     hash: "e9b6ea2db3bdd38c",
   }

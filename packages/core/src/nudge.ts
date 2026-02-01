@@ -307,7 +307,7 @@ export function createBuilder<
     return def.format(step);
   }
 
-  return {
+    return {
     prompt: <
       Id extends string,
       Optionals extends string = never,
@@ -315,12 +315,12 @@ export function createBuilder<
     >(
       id: Id,
       builderFn: (
-        p: PromptBuilder<Defs>,
-      ) => PromptBuilder<Defs, Optionals, Variants>,
+        p: PromptBuilder<readonly AnyStepDefinition[]>,
+      ) => PromptBuilder<readonly AnyStepDefinition[], Optionals, Variants>,
     ): Prompt<Id, Optionals, Variants> => {
       const state: PromptBuilderState = { steps: [] };
       const builder = createPromptBuilder(state);
-      builderFn(builder as PromptBuilder<Defs>);
+      builderFn(builder as PromptBuilder<readonly AnyStepDefinition[]>);
 
       return {
         id,
