@@ -356,6 +356,27 @@ npx @nudge-ai/cli eval --verbose    # Show detailed test results
 | `--verbose` | — | Show detailed test results |
 | `--judge` | — | Use LLM to evaluate string assertions |
 
+### `improve`
+
+Iteratively improve prompts based on failing tests. This command modifies the generated `prompts.gen.ts` file directly while suggesting source-level changes you can apply to your `.prompt.ts` files.
+
+```bash
+npx @nudge-ai/cli improve                    # Analyze and improve prompts with failing tests
+npx @nudge-ai/cli improve --max-iterations 5 # Control max improvement iterations
+npx @nudge-ai/cli improve --prompt-ids foo   # Target specific prompts
+npx @nudge-ai/cli improve --verbose          # Show detailed analysis
+npx @nudge-ai/cli improve --judge            # Use LLM judge for string assertions
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--max-iterations <n>` | `3` | Maximum improvement iterations per prompt |
+| `--prompt-ids <ids>` | — | Comma-separated list of specific prompt IDs to improve |
+| `--verbose` | — | Show detailed improvement analysis |
+| `--judge` | — | Use LLM to evaluate string assertions |
+
+**Note:** Changes are made to `prompts.gen.ts` only. Run `npx @nudge-ai/cli generate` to reset, or apply the source hints to your `.prompt.ts` files for permanent changes.
+
 ## Config Options
 
 Configuration in `nudge.config.json`:

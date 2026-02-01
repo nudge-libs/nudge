@@ -4,7 +4,7 @@ import { input, select } from "@inquirer/prompts";
 import * as fs from "fs";
 import * as path from "path";
 import { AIConfig } from "./ai.js";
-import { evaluate, generate } from "./index.js";
+import { evaluate, generate, improve } from "./index.js";
 
 type NudgeConfig = {
   generatedFile?: string;
@@ -160,6 +160,58 @@ program
       });
     } catch (error) {
       console.error("Error evaluating prompts:", error);
+      process.exit(1);
+    }
+  })
+  .command("improve", "Iteratively improve prompts based on failing tests")
+  .option("--max-iterations <n>", "Maximum improvement iterations", {
+    default: "3",
+  })
+  .option("--prompt-ids <ids>", "Comma-separated list of specific prompt IDs to improve")
+  .option("--verbose", "Show detailed improvement steps", {
+    default: false,
+  })
+  .option("--judge", "Use LLM to evaluate string assertions", {
+    default: false,
+  })
+  .action(async ({ options }) => {
+    const maxIterations = parseInt(options.maxIterations as string, 10);
+    const promptIdsStr = options.promptIds as string | undefined;
+    const promptIds = promptIdsStr
+      ? promptIdsStr.split(",").map((id) => id.trim())
+      : undefined;
+    const verbose = options.verbose as boolean;
+    const judge = options.judge as boolean;
+    const cwd = process.cwd();
+    const configPath = path.join(cwd, "nudge.config.json");
+
+    let config: NudgeConfig = {};
+    if (fs.existsSync(configPath)) {
+      config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    }
+
+    if (!config.ai) {
+      console.error("Error: AI config is required in nudge.config.json");
+      process.exit(1);
+    }
+
+    const outputPath = config.generatedFile
+      ? path.join(cwd, config.generatedFile)
+      : path.join(cwd, "src", "prompts.gen.ts");
+
+    const targetDir = path.dirname(outputPath);
+
+    try {
+      await improve(targetDir, outputPath, {
+        maxIterations,
+        promptIds,
+        verbose,
+        judge,
+        aiConfig: config.ai,
+        promptFilenamePattern: config.promptFilenamePattern,
+      });
+    } catch (error) {
+      console.error("Error improving prompts:", error);
       process.exit(1);
     }
   });

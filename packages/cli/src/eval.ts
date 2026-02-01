@@ -222,10 +222,37 @@ export async function evaluateVariant(
   };
 }
 
-export function formatTestResult(result: TestResult, index: number): string {
+export function formatTestResult(
+  result: TestResult,
+  index: number,
+  verbose: boolean = false,
+): string {
   const status = result.passed ? "✓" : "✗";
   const desc = result.description || `Test ${index + 1}`;
   const lines = [`     ${status} ${desc}`];
+
+  if (verbose) {
+    // Show input (truncated if too long)
+    const inputPreview =
+      result.input.length > 80
+        ? result.input.slice(0, 80) + "..."
+        : result.input;
+    lines.push(`       Input: "${inputPreview}"`);
+
+    // Show LLM output
+    const outputLines = result.output.split("\n");
+    if (outputLines.length === 1 && result.output.length <= 100) {
+      lines.push(`       Output: "${result.output}"`);
+    } else {
+      lines.push(`       Output:`);
+      for (const line of outputLines.slice(0, 5)) {
+        lines.push(`         ${line}`);
+      }
+      if (outputLines.length > 5) {
+        lines.push(`         ... (${outputLines.length - 5} more lines)`);
+      }
+    }
+  }
 
   if (!result.passed && result.reason) {
     lines.push(`       Reason: ${result.reason}`);
@@ -253,7 +280,7 @@ export function formatVariantEvaluation(
 
   if (verbose && evaluation.results.length > 0) {
     for (let i = 0; i < evaluation.results.length; i++) {
-      lines.push(formatTestResult(evaluation.results[i], i));
+      lines.push(formatTestResult(evaluation.results[i], i, verbose));
     }
   }
 

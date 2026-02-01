@@ -30,19 +30,29 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
         .do("include specific examples where relevant"),
     )
     // Tests for evaluating prompt quality
+    // These tests are designed to catch common summarization issues
+    // that the improve command can fix by refining the prompt
     .test(
-      "The quick brown fox jumps over the lazy dog. This sentence contains every letter of the alphabet and is commonly used for typing practice.",
-      (output) => output.length < 200,
-      "Should produce concise output",
+      "The company reported Q3 earnings of $5.2 billion, up 12% from last year. The CEO expressed optimism about future growth prospects.",
+      (output) =>
+        output.includes("$5.2 billion") &&
+        !output.toLowerCase().includes("impressive") &&
+        !output.toLowerCase().includes("strong") &&
+        !output.toLowerCase().includes("excellent"),
+      "Should preserve exact figures without adding qualitative language",
     )
     .test(
-      "Climate change is causing global temperatures to rise by 1.5 degrees Celsius. Scientists report that ice caps are melting at unprecedented rates.",
-      (output) => output.includes("1.5") || output.includes("temperature"),
-      "Should preserve key facts",
+      "Scientists discovered a new species of deep-sea fish at 8,200 meters depth. The fish has bioluminescent properties and measures approximately 15cm in length.",
+      (output) =>
+        output.includes("8,200") &&
+        output.includes("15") &&
+        !output.includes("•") &&
+        !output.includes("-  "),
+      "Should include all numbers and avoid bullet point formatting",
     )
     .test(
-      "The company reported Q3 earnings of $5.2 billion, up 12% from last year.",
-      "should mention the earnings figure without adding analysis",
+      "The patient received 500mg of medication twice daily for 14 days. Blood pressure decreased from 150/95 to 120/80 mmHg.",
+      "must include all dosage numbers (500mg, twice daily, 14 days) and both blood pressure readings exactly as stated",
     ),
 );
 

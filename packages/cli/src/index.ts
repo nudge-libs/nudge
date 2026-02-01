@@ -10,6 +10,7 @@ import {
   formatVariantEvaluation,
   type VariantEvaluation,
 } from "./eval.js";
+import { improve, type ImproveOptions, type ImprovementResult } from "./improve.js";
 
 export type GenerateOptions = {
   promptFilenamePattern?: string;
@@ -239,6 +240,9 @@ export {
   discoverPrompts,
   evaluate,
   generate,
+  improve,
   type DiscoveredPrompt,
+  type ImprovementResult,
+  type ImproveOptions,
   type VariantEvaluation,
 };
