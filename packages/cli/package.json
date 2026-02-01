@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@caporal/core": "^2.0.7",
+    "@inquirer/prompts": "^8.2.0",
     "@nudge-ai/core": "workspace:*"
   },
   "peerDependencies": {
