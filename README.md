@@ -221,7 +221,7 @@ prompt("strict-assistant", (p) =>
 Define multiple variants of a prompt for A/B testing. Each variant adds additional steps to the base prompt, giving you explicit control over what differs between variants.
 
 ```ts
-prompt("summarizer", (p) =>
+const summarizer = prompt("summarizer", (p) =>
   p
     .persona("expert summarizer")
     .input("text to summarize")
@@ -249,16 +249,48 @@ Each variant generates a separate prompt via the AI, ensuring meaningful differe
 
 ```ts
 // Variant names are typed!
-summarizerPrompt.toString({ variant: "short" });
-summarizerPrompt.toString({ variant: "detailed" });
+summarizer.toString({ variant: "short" });
+summarizer.toString({ variant: "detailed" });
 
 // List available variants
-console.log(summarizerPrompt.variantNames); // ["short", "detailed"]
+console.log(summarizer.variantNames); // ["short", "detailed"]
 
 // A/B test with random selection
-const variants = summarizerPrompt.variantNames;
+const variants = summarizer.variantNames;
 const randomVariant = variants[Math.floor(Math.random() * variants.length)];
-summarizerPrompt.toString({ variant: randomVariant });
+summarizer.toString({ variant: randomVariant });
+```
+
+## Custom Steps
+
+Create custom step types for domain-specific needs using `createStep` and `createBuilder`:
+
+```ts
+import { createStep, createBuilder } from "@nudge-ai/core";
+
+// Define a custom step
+const tone = createStep({
+  name: "tone",
+  build: (style: string) => ({ type: "tone" as const, style }),
+  format: (step) => `[Tone] Write in a ${step.style} tone.`,
+});
+
+// Create a builder with your custom step (base steps are included automatically)
+const builder = createBuilder([tone]);
+
+// Use your custom step alongside built-in steps
+export const myPrompt = builder.prompt("my-prompt", (p) =>
+  p
+    .persona("helpful assistant")
+    .tone("friendly and casual") // Your custom step!
+    .do("be concise")
+);
+```
+
+To create a builder with **only** your custom steps (no base steps):
+
+```ts
+const minimalBuilder = createBuilder([tone], { omitBaseSteps: true });
 ```
 
 ## CLI Options
@@ -293,3 +325,21 @@ Configuration in `nudge.config.json`:
 |---------|-------------|
 | `@nudge-ai/core` | Prompt builder and types |
 | `@nudge-ai/cli` | Codegen CLI |
+
+## API Reference
+
+### Core Exports
+
+```ts
+import { prompt, createBuilder, createStep } from "@nudge-ai/core";
+import type { Prompt, Builder, StepDefinition } from "@nudge-ai/core";
+```
+
+| Export | Description |
+|--------|-------------|
+| `prompt` | Create a prompt using the default builder with all base steps |
+| `createBuilder` | Create a custom builder, optionally with additional steps |
+| `createStep` | Define a custom step type |
+| `Prompt` | Type for prompt instances |
+| `Builder` | Type for builder instances |
+| `StepDefinition` | Type for step definitions |

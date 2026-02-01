@@ -1,0 +1,115 @@
+---
+title: Custom Steps
+description: Define your own step types for domain-specific prompts.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Overview
+
+While Nudge provides built-in methods like `.persona()`, `.do()`, and `.constraint()`, you can define custom step types for domain-specific needs.
+
+## Creating a Custom Step
+
+Use `createStep` to define a new step type:
+
+```ts
+import { createStep } from "@nudge-ai/core";
+
+const tone = createStep({
+  name: "tone",
+  build: (style: string) => ({ type: "tone" as const, style }),
+  format: (step) => `[Tone] Write in a ${step.style} tone.`,
+});
+```
+
+### Step Definition
+
+| Property | Description |
+|----------|-------------|
+| `name` | Method name on the builder (e.g., `"tone"` → `.tone()`) |
+| `build` | Function that creates the step data from arguments |
+| `format` | Function that formats the step for the AI prompt generator |
+
+## Creating a Custom Builder
+
+Use `createBuilder` to create a builder with your custom steps:
+
+```ts
+import { createBuilder, createStep } from "@nudge-ai/core";
+
+const tone = createStep({
+  name: "tone",
+  build: (style: string) => ({ type: "tone" as const, style }),
+  format: (step) => `[Tone] Write in a ${step.style} tone.`,
+});
+
+// Base steps (persona, do, dont, etc.) are included automatically
+const builder = createBuilder([tone]);
+```
+
+Now use your custom step:
+
+```ts
+export const friendlyBot = builder.prompt("friendly-bot", (p) =>
+  p
+    .persona("helpful assistant")
+    .tone("friendly and casual") // Your custom step!
+    .do("use emoji occasionally")
+);
+```
+
+## Multiple Custom Steps
+
+Pass multiple steps to `createBuilder`:
+
+```ts
+const tone = createStep({
+  name: "tone",
+  build: (style: string) => ({ type: "tone" as const, style }),
+  format: (step) => `[Tone] Write in a ${step.style} tone.`,
+});
+
+const audience = createStep({
+  name: "audience",
+  build: (level: "beginner" | "expert") => ({ type: "audience" as const, level }),
+  format: (step) => `[Audience] Target ${step.level}-level readers.`,
+});
+
+const builder = createBuilder([tone, audience]);
+
+export const tutorial = builder.prompt("tutorial", (p) =>
+  p
+    .persona("technical writer")
+    .tone("educational")
+    .audience("beginner")
+    .do("include code examples")
+);
+```
+
+## Omitting Base Steps
+
+To create a builder with **only** your custom steps (no built-in steps):
+
+```ts
+const minimalBuilder = createBuilder([tone], { omitBaseSteps: true });
+```
+
+<Callout type="warn">
+  With `omitBaseSteps: true`, methods like `.persona()`, `.do()`, `.constraint()` won't be available.
+</Callout>
+
+## Type Safety
+
+Custom steps are fully typed. The builder knows exactly which methods are available:
+
+```ts
+const builder = createBuilder([tone]);
+
+builder.prompt("test", (p) =>
+  p
+    .persona("assistant") // ✓ Built-in step
+    .tone("casual")       // ✓ Custom step
+    .mood("happy")        // ✗ TypeScript error - 'mood' doesn't exist
+);
+```
