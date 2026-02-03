@@ -2,6 +2,7 @@ import { baseOptions } from "@/lib/layout.shared";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { Link } from "react-router";
+import { useState } from "react";
 import type { Route } from "./+types/home";
 
 export function meta({}: Route.MetaArgs) {
@@ -40,25 +41,52 @@ and clarity.
 - Keep your response to a maximum of 3 paragraphs`;
 
 export default function Home() {
+  const [hovered, setHovered] = useState(false);
+
+  const ctaStyle: React.CSSProperties = {
+    boxShadow: hovered
+      ? "0 12px 40px rgba(99,102,241,0.45), 0 0 90px rgba(99,102,241,0.24)"
+      : "0 6px 20px rgba(99,102,241,0.22), 0 0 40px rgba(99,102,241,0.12)",
+    transition: "box-shadow 220ms ease, transform 220ms ease",
+    transform: hovered ? "translateY(-1px)" : "none",
+  };
   return (
     <HomeLayout {...baseOptions()}>
+      <style>{` 
+        .glow-pulse{ animation: glow 3s ease-in-out infinite; }
+        @keyframes glow {
+          0% { transform: scale(1); opacity: 0.88; }
+          50% { transform: scale(1.035); opacity: 1; }
+          100% { transform: scale(1); opacity: 0.88; }
+        }
+      `}</style>
       <div className="flex flex-col items-center flex-1 px-4 py-16 md:py-24">
         {/* Hero */}
-        <div className="text-center max-w-2xl mb-16">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 mb-6">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+        <div className="text-center max-w-2xl mb-16 relative overflow-visible">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -inset-6 rounded-2xl blur-3xl opacity-80 glow-pulse"
+            style={{
+              background: "linear-gradient(180deg, rgba(99,102,241,0.12), rgba(16,185,129,0.10))",
+              zIndex: 0,
+            }}
+          />
+          <div className="relative z-10">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 mb-6">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+              </span>
+              Pre-release
             </span>
-            Pre-release
-          </span>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-5 text-balance tracking-tight">
-            Type-safe prompt engineering for production AI
-          </h1>
-          <p className="text-fd-muted-foreground text-base md:text-lg text-pretty max-w-xl mx-auto">
-            Define prompts with a fluent builder. Let AI generate optimized
-            system prompts. Ship with confidence.
-          </p>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-5 text-balance tracking-tight">
+              Type-safe prompt engineering for production AI
+            </h1>
+            <p className="text-fd-muted-foreground text-base md:text-lg text-pretty max-w-xl mx-auto">
+              Define prompts with a fluent builder. Let AI generate optimized
+              system prompts. Ship with confidence.
+            </p>
+          </div>
         </div>
 
         {/* Install + CTA */}
@@ -71,10 +99,22 @@ export default function Home() {
           </code>
           <div className="flex gap-3">
             <Link
-              className="bg-fd-primary text-fd-primary-foreground rounded-md font-medium px-5 py-2 text-sm hover:opacity-90 transition-opacity"
               to="/docs"
+              onMouseEnter={() => setHovered(true)}
+              onMouseLeave={() => setHovered(false)}
+              onFocus={() => setHovered(true)}
+              onBlur={() => setHovered(false)}
+              className={`bg-fd-primary text-fd-primary-foreground rounded-md font-medium px-5 py-2 text-sm transition-transform focus:outline-none relative overflow-hidden`}
+              style={ctaStyle}
             >
-              Get Started
+              <span
+                aria-hidden
+                className={`pointer-events-none absolute -inset-1 rounded-md blur-2xl opacity-90 glow-pulse`}
+                style={{
+                  background: "linear-gradient(90deg, rgba(99,102,241,0.32), rgba(236,72,153,0.22))",
+                }}
+              />
+              <span className="relative">Get Started</span>
             </Link>
             <a
               className="border border-fd-border text-fd-foreground rounded-md font-medium px-5 py-2 text-sm hover:bg-fd-accent transition-colors"
