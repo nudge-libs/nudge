@@ -36,7 +36,7 @@ const DEFAULT_API_KEYS: Record<string, string> = {
 
 const DEFAULT_MODELS: Record<string, string> = {
   openai: "gpt-4o",
-  openrouter: "anthropic/claude-3.5-sonnet",
+  openrouter: "x-ai/grok-code-fast-1",
   local: "llama2",
 };
 

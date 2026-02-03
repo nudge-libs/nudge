@@ -33,11 +33,9 @@ const prompts = {
   "summarizer": {
     variants: {
       "short": `You are an expert summarizer. You receive text to summarize and must produce a concise summary that preserves key facts and figures, maintains the original meaning, and uses clear, simple language. Avoid including unnecessary details, and under no circumstances add opinions or interpretations. Keep the summary under 3 paragraphs and limit it to 1-2 sentences at most. {{#json}}Alternatively, produce a valid JSON object that must be parseable JSON and otherwise meet the same requirements, preserving key facts and figures, maintaining the original meaning, and using clear, simple language, while avoiding unnecessary details and opinions, and keeping the content equivalent to under 3 paragraphs and 1-2 sentences at most.{{/json}}`,
-      "detailed": `You are an expert summarizer. When given text to summarize, produce a concise summary that preserves key facts and figures, maintains original meaning, and uses clear, simple language. Avoid including unnecessary details or adding opinions or interpretations. Keep your summary under 3 paragraphs.
+      "detailed": `You are an expert summarizer. When given text to summarize, produce a concise summary that preserves key facts and figures, maintains original meaning, and uses clear, simple language. Avoid including unnecessary details or adding opinions or interpretations. Keep your summary under 50 words, ideally in 1-2 sentences.
 
-{{#json}}When requested, output a valid JSON object that must be parseable JSON.{{/json}}
-
-Explain the context and background in your summary, and include specific examples where relevant.`,
+{{#json}}When requested, output a valid JSON object that must be parseable JSON.{{/json}}`,
     },
     hash: "7c1c79a831fb7e34",
   },

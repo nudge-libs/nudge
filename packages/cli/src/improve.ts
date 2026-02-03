@@ -6,11 +6,11 @@ import { loadExistingPrompts } from "./cache.js";
 import { discoverPrompts } from "./discover.js";
 import { evaluateVariant, type TestResult } from "./eval.js";
 import {
-  applyPromptChanges,
-  requestImprovement,
-  type FailingTestInfo,
-  type PromptChange,
-  type SourceHint,
+    applyPromptChanges,
+    requestImprovement,
+    type FailingTestInfo,
+    type PromptChange,
+    type SourceHint,
 } from "./improve-ai.js";
 
 export type ImproveOptions = {
@@ -19,6 +19,7 @@ export type ImproveOptions = {
   verbose: boolean;
   judge: boolean;
   // Callbacks for Ink UI
+  onStatus?: (promptId: string, variantName: string, status: string) => void;
   onIterationStart?: (
     promptId: string,
     variantName: string,
@@ -148,6 +149,8 @@ async function improveVariant(
   let prompt = currentPrompt;
   const allSourceHints: SourceHint[] = [];
 
+  options.onStatus?.(promptId, variantName, "Evaluating current prompt...");
+
   let evaluation = await evaluateVariant(
     promptId,
     variantName,
@@ -190,6 +193,8 @@ async function improveVariant(
       };
     });
 
+    options.onStatus?.(promptId, variantName, "Requesting AI improvement...");
+
     // Request improvement from AI
     const suggestion = await requestImprovement(
       prompt,
@@ -218,6 +223,8 @@ async function improveVariant(
 
     // Update the generated file
     updatePromptsGenFile(outputPath, promptId, variantName, prompt);
+
+    options.onStatus?.(promptId, variantName, "Re-evaluating prompt...");
 
     // Re-evaluate
     evaluation = await evaluateVariant(
