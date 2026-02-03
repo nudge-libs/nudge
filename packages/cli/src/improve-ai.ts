@@ -1,6 +1,5 @@
 import type { AIConfig } from "./ai.js";
 import { formatAPIError } from "./errors.js";
-import { createSpinner } from "./status.js";
 import * as z from "zod/mini";
 
 export type PromptChange = {
