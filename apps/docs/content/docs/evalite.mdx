@@ -1,79 +1,22 @@
 ---
-title: Testing with Evalite
-description: Use Evalite with Nudge to test real prompt behavior and drive continuous self-improvement.
+title: Testing and Improving Prompts with Evalite
+description: A/B test Nudge prompt variants and iteratively improve them using Evalite.
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-A practical guide to integrating **Nudge** with **Evalite** for testing and improving AI-powered applications.
+This guide shows how **Nudge** and **Evalite** work together to A/B test prompts and drive continuous improvement.
 
-## Why Nudge + Evalite?
-
-Nudge and Evalite solve different parts of the same problem:
-
-- **Nudge** defines *what the prompt should do* (structure, intent, constraints)
-- **Evalite** verifies *what the prompt actually does* when run against real data
-
-Used together, they form a tight loop:
-
-1. **Define** prompts with Nudge
-2. **Generate** system prompts with AI
-3. **Evaluate** real outputs using Evalite
-4. **Promote failures into tests**
-5. **Auto-improve** prompts with `nudge improve`
-
-Evalite is where you *discover* problems.  
-Nudge is where you *make them impossible to reintroduce*.
+- **Nudge** defines prompt structure and variants
+- **Evalite** executes those variants on real data and scores behavior
 
 ---
 
-## Setup
+## A/B Testing Prompt Variants
 
-### Install dependencies
+Variants in Nudge represent controlled changes on top of a shared base prompt.
 
-```bash
-npm install @nudge-ai/core @nudge-ai/cli
-npm install -D evalite vitest autoevals
-```
-
-### Initialize Nudge
-
-```bash
-npx @nudge-ai/cli init
-```
-
-### Add scripts
-
-```json
-{
-  "scripts": {
-    "nudge:generate": "nudge generate",
-    "eval:dev": "evalite watch",
-    "eval:ci": "evalite run"
-  }
-}
-```
-
----
-
-## Core Integration Pattern
-
-Nudge generates prompts. Evalite executes and scores them.
-
-Evalite evals always:
-
-- run real LLM calls
-- return string outputs
-- score behavior across many inputs
-
-Those outputs are exactly what Nudge's `.test()` API consumes.
-
----
-
-## Step 1: Define the Prompt (Nudge)
-
-```typescript
-// src/summarizer.prompt.ts
+```ts
 import { prompt } from "@nudge-ai/core";
 
 export const summarizerPrompt = prompt("summarizer", (p) =>
@@ -81,189 +24,92 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
     .persona("expert summarizer")
     .input("text to summarize")
     .output("concise summary")
-    .do("preserve key facts", { nudge: 4 })
-    .dont("add opinions", { nudge: 5 })
-    .constraint("keep under 150 words")
+    .variant("short", (v) =>
+      v.constraint("limit to 1–2 sentences")
+    )
+    .variant("detailed", (v) =>
+      v
+        .do("explain context")
+        .do("include examples")
+    )
 );
 ```
 
-Generate it:
+Each variant produces a distinct system prompt while keeping intent consistent.
 
-```bash
-npm run nudge:generate
-```
+## Comparing Variants with Evalite
 
----
+Evalite’s each() API maps directly to Nudge variants.
 
-## Step 2: Evaluate Real Behavior (Evalite)
-
-```typescript
-// src/summarizer.eval.ts
+```ts
 import { evalite } from "evalite";
-import { Levenshtein, FactualConsistency } from "autoevals";
+import { generateText } from "ai";
+import { exactMatch } from "evalite/scorers";
 import { summarizerPrompt } from "./summarizer.prompt";
 import "./prompts.gen";
 
-evalite("Summarizer Quality", {
-  data: [
+evalite.each(
+  summarizerPrompt.variantNames.map((name) => ({
+    name,
+    input: { variant: name },
+  }))
+)("Summarizer Variants", {
+  data: async () => [
     {
       input: "Climate change refers to long-term shifts...",
-      expected: "Climate change involves long-term shifts in temperature...",
+      expected: "Climate change involves long-term shifts...",
     },
   ],
 
-  task: async (input) => {
-    return callLLM({
-      system: summarizerPrompt.toString(),
-      user: input.input,
+  task: async (input, variant) => {
+    return generateText({
+      model: "gpt-4o-mini",
+      system: summarizerPrompt.toString({ variant: variant.variant }),
+      prompt: input.input,
     });
   },
 
   scorers: [
-    Levenshtein,
-    (input, output) => ({
-      name: "Factual consistency",
-      score: FactualConsistency({ output, expected: input.input }),
-    }),
-    (input, output) => ({
-      name: "Length",
-      score: output.split(/\s+/).length <= 150 ? 1 : 0,
-    }),
+    {
+      scorer: ({ output, expected }) =>
+        exactMatch({ actual: output, expected }),
+    },
   ],
 });
 ```
 
-Run it:
+All variants are evaluated on the same inputs, making comparisons repeatable.
 
-```bash
-npm run eval:dev
-```
+## From A/B Results to Prompt Contracts
 
-Evalite will:
+Evalite answers what performs better in practice. Nudge enforces what must never regress.
 
-- execute the prompt on all inputs
-- score outputs
-- show failures in a live UI (localhost:3006)
-- persist results for tracking over time
+Once Evalite exposes stable failure modes (length, tone, missing facts), encode them directly:
 
----
-
-## Step 3: Turn Evalite Failures into Nudge Tests
-
-Evalite answers: *"What goes wrong in practice?"*
-
-Nudge tests answer: *"This must never happen again."*
-
-If Evalite shows failures like:
-
-- output too long
-- missing key facts
-- added opinions
-
-Encode them directly in the prompt:
-
-```typescript
-export const summarizerPrompt = prompt("summarizer", (p) =>
-  p
-    .persona("expert summarizer")
-    .input("text to summarize")
-    .output("concise summary")
-    .test(
-      "Climate change refers to long-term shifts...",
-      (output) => output.length < 150,
-      "Summary must stay under 150 words",
-    )
-    .test(
-      "Climate change refers to long-term shifts...",
-      (output) => !/should|believe|opinion/i.test(output),
-      "Must not add opinions",
-    )
+```ts
+.test(
+  "Climate change refers to long-term shifts...",
+  (output) => output.split(/\s+/).length <= 150,
+  "Must stay under 150 words"
 );
 ```
 
-Now these expectations are part of the prompt contract.
+This turns empirical findings into prompt guarantees.
 
----
+## Self-Improvement Loop
 
-## Step 4: Self-Improve with Nudge
+Nudge can automatically refine prompts based on failing tests:
 
 ```bash
 npx @nudge-ai/cli improve --judge
 ```
 
-Nudge will:
+The loop becomes:
 
-- Detect failing tests
-- Ask the LLM how to fix them
-- Update the generated prompt
-- Re-run tests iteratively
+1. A/B test variants with Evalite
+2. Identify consistent failures
+3. Promote them into Nudge tests
+4. Auto-improve the prompt
+5. Re-evaluate
 
-<Callout>
-Evalite discovers the failure modes. Nudge's `improve` command fixes them at the prompt level.
-</Callout>
-
----
-
-## Advanced Patterns
-
-### Testing Variants
-
-Evalite works naturally with Nudge variants:
-
-```typescript
-summarizerPrompt.toString({ variant: "academic" });
-summarizerPrompt.toString({ variant: "casual" });
-```
-
-Run separate evals per variant to compare tone, clarity, or accuracy.
-
-### Optional Blocks
-
-```typescript
-formatterPrompt.toString({ json: true });
-```
-
-Evalite can assert JSON validity, formatting, or schema compliance.
-
-### LLM-as-Judge
-
-Use Evalite for nuanced scoring, then convert consistent failures into string-based Nudge tests:
-
-```typescript
-.test(
-  "input",
-  "should preserve all factual details without exaggeration",
-)
-```
-
-These integrate cleanly with `--judge`.
-
----
-
-## Best Practices
-
-- Use Evalite to explore behavior on real data
-- Promote stable findings into Nudge `.test()`
-- Let `nudge improve` automate what it can
-- Keep generated files disposable
-- Treat `.prompt.ts` as the source of truth
-
----
-
-## When to Use What
-
-| Tool | Purpose |
-|------|---------|
-| Nudge `.test()` | Enforce prompt contracts |
-| Evalite | Discover real-world failures |
-| `improve` | Close the loop automatically |
-
----
-
-## Summary
-
-Evalite makes prompt behavior observable.  
-Nudge makes it correct by construction.
-
-Together, they turn prompt engineering into a measurable, iterative, and self-improving system.
-
+<Callout> Evalite finds the failure modes. Nudge prevents them from returning. </Callout>
