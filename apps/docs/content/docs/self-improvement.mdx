@@ -1,0 +1,236 @@
+---
+title: Self-Improvement
+description: Test and automatically improve your prompts.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Overview
+
+Define test cases for your prompts, then use the CLI to automatically evaluate and improve them. This ensures your AI-generated prompts work well in practice.
+
+## Adding Tests
+
+Use `.test()` to define test cases for a prompt:
+
+```ts
+const summarizer = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .output("concise summary")
+    .test(
+      "The quick brown fox jumps over the lazy dog.",
+      (output) => output.length < 100,
+      "Output should be concise"
+    )
+    .test(
+      "Long technical document about quantum computing...",
+      "should mention key concepts without jargon",
+      "Simplifies technical content"
+    )
+);
+```
+
+## Test Types
+
+Nudge supports two types of assertions:
+
+### Function Assertions
+
+Run immediately and are fast:
+
+```ts
+.test("input text", (output) => output.includes("expected phrase"))
+.test("input text", (output) => output.length < 500)
+.test("input text", (output) => output.split("\n").length <= 3)
+```
+
+Function assertions are evaluated directly by Node.js, so they run instantly without additional API calls.
+
+### String Assertions
+
+Describe expected behavior in natural language. Requires the LLM judge to evaluate:
+
+```ts
+.test("input text", "should be professional and polite")
+.test("input text", "must not contain personal opinions")
+.test("input text", "should include specific examples")
+```
+
+String assertions are more flexible and closer to how you'd naturally describe prompt behavior, but require the `--judge` flag.
+
+## Evaluating Tests
+
+### Run tests
+
+```bash
+# Function assertions only (fast)
+npx @nudge-ai/cli eval
+
+# Include string assertions with LLM judge
+npx @nudge-ai/cli eval --judge
+
+# Show detailed results
+npx @nudge-ai/cli eval --verbose
+```
+
+Output shows which tests pass/fail and details about failures:
+
+```
+✓ summarizer: passed
+✗ analyzer: 2 failed
+  ✗ Input: "Some data..."
+    Expected: "should identify trends"
+    Got: "The data shows..."
+```
+
+## Auto-Improving Prompts
+
+The `improve` command automatically fixes failing tests:
+
+```bash
+# Improve all prompts with failing tests
+npx @nudge-ai/cli improve
+
+# Control iterations
+npx @nudge-ai/cli improve --max-iterations 5
+
+# Target specific prompts
+npx @nudge-ai/cli improve --prompt-ids summarizer,analyzer
+
+# Show detailed analysis
+npx @nudge-ai/cli improve --verbose
+
+# Use LLM judge for string assertions
+npx @nudge-ai/cli improve --judge
+```
+
+### How Improvement Works
+
+1. Analyzes failing tests
+2. Requests suggestions from the AI to fix issues
+3. Applies the suggestions to the generated prompt
+4. Re-runs tests to verify improvements
+5. Repeats until tests pass or plateau
+
+The process is iterative—it stops when all tests pass, max iterations reached, or no further improvements are possible.
+
+### Output
+
+The improve command shows:
+
+```
+Iteration 1/3 for "summarizer"
+1 failing test:
+
+  Input: "The quick brown fox..."
+  Expected: output.length < 100
+  Got: "A fox is an animal that jumps..."
+
+Analyzing failures and generating improvements...
+
+Suggested Changes:
+  + Added: "keep responses under 100 words"
+
+Results:
+  ✓ Test: "The quick brown fox..." (fixed)
+
+✓ summarizer: improved in 1 iteration(s)
+```
+
+<Callout>
+  Changes from `improve` are made to `prompts.gen.ts` only. Run `npx @nudge-ai/cli generate` to reset, or apply source hints to your `.prompt.ts` files for permanent changes.
+</Callout>
+
+## Workflow Example
+
+Here's a typical testing and improvement workflow:
+
+### 1. Add tests to your prompt
+
+```ts
+// src/translator.prompt.ts
+export const translator = prompt("translator", (p) =>
+  p
+    .persona("professional translator")
+    .input("text to translate to {{language}}")
+    .output("translated text")
+    .do("preserve meaning and tone")
+    .test(
+      "The meeting is at 3 PM tomorrow.",
+      (output) => output.length > 0,
+      "Should produce output"
+    )
+    .test(
+      "Hello, how are you?",
+      "should be a natural greeting in the target language",
+      "Natural translation"
+    )
+);
+```
+
+### 2. Generate prompts
+
+```bash
+npx @nudge-ai/cli generate
+```
+
+### 3. Evaluate tests
+
+```bash
+npx @nudge-ai/cli eval --judge
+```
+
+See which tests fail.
+
+### 4. Auto-improve
+
+```bash
+npx @nudge-ai/cli improve --verbose
+```
+
+Watch the AI fix failing tests iteratively.
+
+### 5. Apply suggestions
+
+The `improve` command suggests changes to your source file:
+
+```
+💡 Source Hint: Consider these changes in translator.prompt.ts:
+   add: .constraint("preserve punctuation and formatting")
+      Reason: Tests show lost punctuation
+   modify: change "preserve meaning and tone" to "preserve exact meaning, tone, and style"
+      Reason: Tone-specific issues in translation
+```
+
+Apply these to your `.prompt.ts` file, then regenerate.
+
+## CLI Options Reference
+
+### `eval`
+
+| Option      | Default | Description                           |
+|-------------|---------|---------------------------------------|
+| `--verbose` | —       | Show detailed test results            |
+| `--judge`   | —       | Use LLM to evaluate string assertions |
+
+### `improve`
+
+| Option                 | Default | Description                                            |
+|------------------------|---------|--------------------------------------------------------|
+| `--max-iterations <n>` | `3`     | Maximum improvement iterations per prompt              |
+| `--prompt-ids <ids>`   | —       | Comma-separated list of specific prompt IDs to improve |
+| `--verbose`            | —       | Show detailed improvement analysis                     |
+| `--judge`              | —       | Use LLM to evaluate string assertions                  |
+
+## Best Practices
+
+<Callout>
+  Start with function assertions—they're fast and cover basic behavior. Add string assertions for nuanced quality checks that need the LLM judge.
+</Callout>
+
+- **Be specific**: Test concrete inputs and outputs, not vague expectations
+- **Mix assertion types**: Use function assertions for hard requirements, strings for nuanced behavior
+- **Iterate**: Use `improve` repeatedly as you refine your prompts
+- **Version control**: Commit your `.prompt.ts` files and suggested changes separately from generated files
