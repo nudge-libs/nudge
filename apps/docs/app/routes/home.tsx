@@ -267,6 +267,22 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Evalite Testing */}
+        <div className="w-full max-w-3xl mt-20">
+          <div className="rounded-xl border border-fd-border bg-fd-card/30 p-6 text-center">
+            <h2 className="text-lg font-semibold mb-3">Test with Evalite</h2>
+            <p className="text-fd-muted-foreground text-sm mb-4">
+              Integrate Nudge with <a href="https://evalite.dev" target="_blank" rel="noopener noreferrer" className="text-fd-primary hover:underline">Evalite</a> for comprehensive testing and evaluation of your AI prompts.
+            </p>
+            <a
+              href="/docs/evalite"
+              className="inline-flex items-center gap-2 text-sm font-medium text-fd-primary hover:underline"
+            >
+              Learn about Evalite Integration →
+            </a>
+          </div>
+        </div>
       </div>
     </HomeLayout>
   );

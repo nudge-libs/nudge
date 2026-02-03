@@ -336,6 +336,8 @@ const summarizer = prompt("summarizer", (p) =>
 .test("input", "must not contain personal opinions")
 ```
 
+For comprehensive testing of AI applications with a dedicated testing framework, see the [Testing with Evalite](https://nudge-ai.dev/evalite) guide, which shows how to integrate Nudge with Evalite for robust LLM evaluation.
+
 ## CLI Options
 
 ### `generate`

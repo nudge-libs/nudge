@@ -1,0 +1,727 @@
+---
+title: Testing with Evalite
+description: Integrate Nudge with Evalite for robust testing of AI-powered applications.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+A comprehensive guide to integrating [Nudge](https://github.com/nudge-ai) with [Evalite](https://evalite.dev) for robust testing of AI-powered applications.
+
+## Why Use Nudge + Evalite Together?
+
+**Nudge** gives you a clean, type-safe API for building and generating system prompts with AI assistance. **Evalite** provides a powerful testing framework specifically designed for LLM-powered applications. Together, they create a complete workflow:
+
+1. **Build** — Define prompts using Nudge's fluent builder API
+2. **Generate** — Let AI synthesize optimal system prompts
+3. **Test** — Use Evalite to verify prompt quality with real test cases
+4. **Iterate** — Refine based on eval results
+
+## Quick Start
+
+### 1. Install Dependencies
+
+```bash
+npm install @nudge-ai/core @nudge-ai/cli
+npm install -D evalite vitest autoevals
+```
+
+### 2. Initialize Nudge
+
+```bash
+npx @nudge-ai/cli init
+```
+
+### 3. Add Scripts to package.json
+
+```json
+{
+  "scripts": {
+    "nudge:generate": "nudge generate",
+    "eval:dev": "evalite watch",
+    "eval:ci": "evalite run"
+  }
+}
+```
+
+## Integration Pattern
+
+The key insight is that Nudge generates the prompts, and Evalite tests them. Here's the recommended workflow:
+
+### Step 1: Define Your Prompt with Nudge
+
+```ts
+// src/summarizer.prompt.ts
+import { prompt } from "@nudge-ai/core";
+
+export const summarizerPrompt = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer with a background in technical writing")
+    .context("Users will paste articles, documents, or notes they want condensed")
+    .input("a block of text to summarize")
+    .output("a concise summary that captures key points")
+    .do("preserve all important facts and figures", { nudge: 4 })
+    .do("use clear, simple language accessible to general audiences")
+    .do("maintain the original tone and intent")
+    .dont("add opinions, interpretations, or commentary", { nudge: 5 })
+    .dont("omit critical information")
+    .constraint("keep under 3 paragraphs or 150 words", { nudge: 3 })
+    .example(
+      "Artificial intelligence is transforming software development through large language models that can understand and generate code. These models, trained on vast datasets, enable new capabilities in code completion, bug detection, and even full application generation.",
+      "AI is revolutionizing software development via large language models trained on extensive datasets. These models enable code completion, bug detection, and application generation."
+    )
+);
+```
+
+### Step 2: Generate the System Prompt
+
+```bash
+npm run nudge:generate
+```
+
+This creates `src/prompts.gen.ts` with your AI-generated system prompts.
+
+### Step 3: Create Evalite Tests
+
+```ts
+// src/summarizer.eval.ts
+import { evalite } from "evalite";
+import { Levenshtein, FactualConsistency } from "autoevals";
+import { summarizerPrompt } from "./summarizer.prompt";
+import "./prompts.gen"; // Import generated prompts
+
+// Your LLM function (example using OpenAI)
+async function generateSummary(text: string): Promise<string> {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: summarizerPrompt.toString() },
+        { role: "user", content: text }
+      ],
+    }),
+  });
+  
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+evalite("Summarizer Prompt Quality", {
+  data: [
+    {
+      input: "The Industrial Revolution was a period of major industrialization and innovation during the late 1700s and early 1800s. It began in Great Britain and quickly spread throughout the world. During this time, new manufacturing processes were developed, including the transition from hand production methods to machines. The use of steam power and the development of machine tools were also key innovations. The textile industry was the first to adopt these new techniques, followed by the iron and steel industries.",
+      expected: "The Industrial Revolution (late 1700s-early 1800s) began in Great Britain and spread globally. It introduced machine-based manufacturing, replacing hand production. Key innovations included steam power and machine tools. The textile, iron, and steel industries pioneered these techniques."
+    },
+    {
+      input: "Climate change refers to long-term shifts in temperatures and weather patterns. These shifts may be natural, but since the 1800s, human activities have been the main driver of climate change, primarily due to the burning of fossil fuels like coal, oil, and gas. Burning fossil fuels generates greenhouse gas emissions that act like a blanket wrapped around the Earth, trapping the sun's heat and raising temperatures.",
+      expected: "Climate change involves long-term shifts in temperature and weather. While natural shifts occur, human activities since the 1800s—especially burning fossil fuels (coal, oil, gas)—are the primary driver. These fuels produce greenhouse gases that trap heat, warming the planet."
+    },
+  ],
+  
+  task: async (input) => {
+    return await generateSummary(input.input);
+  },
+  
+  scorers: [
+    // Check similarity to expected output
+    Levenshtein,
+    
+    // Verify factual consistency with source
+    (input, output) => ({
+      name: "Factual Consistency",
+      score: FactualConsistency({ output, expected: input.input }),
+    }),
+    
+    // Check length constraint (< 150 words)
+    (input, output) => ({
+      name: "Length Constraint",
+      score: output.split(/\s+/).length <= 150 ? 1 : 0,
+    }),
+    
+    // Verify no opinions added
+    (input, output) => {
+      const opinionWords = ["should", "must", "believe", "think", "feel", "opinion"];
+      const hasOpinions = opinionWords.some(word => 
+        output.toLowerCase().includes(word)
+      );
+      return {
+        name: "No Opinions",
+        score: hasOpinions ? 0 : 1,
+      };
+    },
+  ],
+});
+```
+
+### Step 4: Run Your Evals
+
+```bash
+# Watch mode - great for development
+npm run eval:dev
+
+# Single run - great for CI
+npm run eval:ci
+```
+
+The eval runner will:
+- Execute your task function with each test case
+- Score outputs using your scorers
+- Display results in an interactive UI at http://localhost:3006
+- Save results to a database for tracking over time
+
+## Advanced Patterns
+
+### Testing Prompt Variants
+
+Nudge supports variants for A/B testing. You can create evals for each variant:
+
+```ts
+// src/summarizer-variants.prompt.ts
+export const summarizerPrompt = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .output("concise summary")
+    .variant("academic", (v) =>
+      v
+        .do("use formal academic language")
+        .do("include technical terminology where appropriate")
+    )
+    .variant("casual", (v) =>
+      v
+        .do("use conversational, friendly language")
+        .do("avoid jargon and technical terms")
+    )
+);
+```
+
+```ts
+// src/summarizer-variants.eval.ts
+import { evalite } from "evalite";
+import { summarizerPrompt } from "./summarizer-variants.prompt";
+import "./prompts.gen";
+
+const testData = [/* your test cases */];
+
+// Test the academic variant
+evalite("Summarizer - Academic Variant", {
+  data: testData,
+  task: async (input) => {
+    const systemPrompt = summarizerPrompt.toString({ variant: "academic" });
+    return await generateSummary(systemPrompt, input.input);
+  },
+  scorers: [
+    // Scorers specific to academic style
+    (input, output) => ({
+      name: "Formal Language",
+      score: /\b(furthermore|moreover|consequently)\b/i.test(output) ? 1 : 0,
+    }),
+  ],
+});
+
+// Test the casual variant
+evalite("Summarizer - Casual Variant", {
+  data: testData,
+  task: async (input) => {
+    const systemPrompt = summarizerPrompt.toString({ variant: "casual" });
+    return await generateSummary(systemPrompt, input.input);
+  },
+  scorers: [
+    // Scorers specific to casual style
+    (input, output) => ({
+      name: "Conversational Tone",
+      score: /\b(you|we|let's|here's)\b/i.test(output) ? 1 : 0,
+    }),
+  ],
+});
+```
+
+### Testing Optional Blocks
+
+Test how optional blocks affect output:
+
+```ts
+// src/formatter.prompt.ts
+export const formatterPrompt = prompt("formatter", (p) =>
+  p
+    .persona("data formatter")
+    .input("unstructured data")
+    .output("formatted output")
+    .optional("json", (p) =>
+      p
+        .output("valid JSON object")
+        .constraint("must be parseable JSON", { nudge: 5 })
+    )
+    .optional("markdown", (p) =>
+      p
+        .output("markdown formatted text")
+        .constraint("use proper markdown syntax", { nudge: 4 })
+    )
+);
+```
+
+```ts
+// src/formatter.eval.ts
+evalite("Formatter - JSON Mode", {
+  data: testData,
+  task: async (input) => {
+    const systemPrompt = formatterPrompt.toString({ json: true });
+    return await generateOutput(systemPrompt, input.input);
+  },
+  scorers: [
+    (input, output) => {
+      try {
+        JSON.parse(output);
+        return { name: "Valid JSON", score: 1 };
+      } catch {
+        return { name: "Valid JSON", score: 0 };
+      }
+    },
+  ],
+});
+```
+
+### Testing Dynamic Variables
+
+Test prompts with different variable values:
+
+```ts
+// src/assistant.prompt.ts
+export const assistantPrompt = prompt("assistant", (p) =>
+  p
+    .persona("helpful assistant for {{company}}")
+    .context("You are supporting {{role}} users")
+    .do("maintain a {{tone}} tone throughout")
+);
+```
+
+```ts
+// src/assistant.eval.ts
+evalite("Assistant - Corporate Context", {
+  data: testData,
+  task: async (input) => {
+    const systemPrompt = assistantPrompt.toString({
+      company: "Acme Corp",
+      role: "executive",
+      tone: "professional",
+    });
+    return await generateResponse(systemPrompt, input.input);
+  },
+  scorers: [/* corporate-appropriate scorers */],
+});
+
+evalite("Assistant - Startup Context", {
+  data: testData,
+  task: async (input) => {
+    const systemPrompt = assistantPrompt.toString({
+      company: "TechStartup",
+      role: "developer",
+      tone: "casual",
+    });
+    return await generateResponse(systemPrompt, input.input);
+  },
+  scorers: [/* startup-appropriate scorers */],
+});
+```
+
+### LLM-as-Judge Scoring
+
+For more nuanced evaluation, use another LLM to judge outputs:
+
+```ts
+import { evalite } from "evalite";
+
+async function llmJudge(
+  input: string,
+  output: string,
+  criteria: string
+): Promise<number> {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert evaluator. Rate the quality of the response on a scale from 0 to 1 based on the given criteria. Respond with only a number."
+        },
+        {
+          role: "user",
+          content: `Input: ${input}\n\nOutput: ${output}\n\nCriteria: ${criteria}`
+        }
+      ],
+    }),
+  });
+  
+  const data = await response.json();
+  return parseFloat(data.choices[0].message.content);
+}
+
+evalite("Summarizer with LLM Judge", {
+  data: testData,
+  task: async (input) => {
+    return await generateSummary(input.input);
+  },
+  scorers: [
+    async (input, output) => ({
+      name: "Clarity",
+      score: await llmJudge(
+        input.input,
+        output,
+        "The summary is clear and easy to understand"
+      ),
+    }),
+    async (input, output) => ({
+      name: "Completeness",
+      score: await llmJudge(
+        input.input,
+        output,
+        "The summary captures all key information from the original"
+      ),
+    }),
+  ],
+});
+```
+
+### Tracing with Evalite
+
+Evalite has built-in tracing support. Wrap your LLM calls to capture execution details:
+
+```ts
+import { evalite, trace } from "evalite";
+
+async function generateSummary(text: string): Promise<string> {
+  return await trace(
+    async () => {
+      // Your LLM call here
+      const response = await fetch(/* ... */);
+      const data = await response.json();
+      return data.choices[0].message.content;
+    },
+    {
+      name: "generate_summary",
+      input: { text },
+      metadata: {
+        model: "gpt-4",
+        max_tokens: 150,
+      },
+    }
+  );
+}
+```
+
+This allows you to see the full execution trace in the Evalite UI.
+
+## Best Practices
+
+### 1. Separate Test Data from Production
+
+Keep your eval test cases in separate files:
+
+```
+src/
+├── prompts/
+│   ├── summarizer.prompt.ts
+│   └── prompts.gen.ts
+├── evals/
+│   ├── test-data/
+│   │   └── summarizer-cases.ts
+│   └── summarizer.eval.ts
+```
+
+### 2. Start with Function Assertions
+
+Function assertions are fast and deterministic. Use them for basic checks:
+
+```ts
+scorers: [
+  // Fast, deterministic checks
+  (input, output) => ({
+    name: "Length OK",
+    score: output.length > 0 && output.length < 500 ? 1 : 0,
+  }),
+  
+  // Then add LLM judges for nuanced checks
+  async (input, output) => ({
+    name: "Quality",
+    score: await llmJudge(input.input, output, "high quality summary"),
+  }),
+]
+```
+
+### 3. Use Evalite's Watch Mode During Development
+
+While developing prompts, keep `npm run eval:dev` running:
+
+1. Edit your `.prompt.ts` file
+2. Run `npm run nudge:generate` to regenerate
+3. Evalite automatically re-runs tests
+4. View results instantly in the UI
+
+### 4. Cache LLM Calls
+
+Implement caching to avoid burning through API credits:
+
+```ts
+const cache = new Map<string, string>();
+
+async function generateSummary(text: string): Promise<string> {
+  const cacheKey = `summary:${text}`;
+  
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey)!;
+  }
+  
+  const result = await callLLM(text);
+  cache.set(cacheKey, result);
+  return result;
+}
+```
+
+### 5. Test at Multiple Levels
+
+Create evals for different aspects:
+
+```ts
+// Unit-level: Test individual constraints
+evalite("Length Constraint", {/* ... */});
+
+// Integration-level: Test full prompt quality
+evalite("Overall Quality", {/* ... */});
+
+// Comparison: Test variants against each other
+evalite("Variant A vs B", {/* ... */});
+```
+
+### 6. Track Metrics Over Time
+
+Use Evalite's storage to track how prompt quality changes:
+
+```bash
+# Run evals and save results
+npm run eval:ci
+
+# Results are stored in node_modules/.evalite/
+# Track these over time or export to your own database
+```
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+name: Eval Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - run: npm ci
+      
+      - name: Generate Prompts
+        run: npm run nudge:generate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      
+      - name: Run Evals
+        run: npm run eval:ci
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      
+      - name: Export Results
+        run: npx evalite export --format html --output ./eval-results.html
+      
+      - name: Upload Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: eval-results
+          path: eval-results.html
+```
+
+### Fail on Low Scores
+
+Create a custom script to fail CI if scores are too low:
+
+```ts
+// scripts/check-eval-scores.ts
+import { readFileSync } from "fs";
+
+const results = JSON.parse(
+  readFileSync("node_modules/.evalite/results.json", "utf-8")
+);
+
+const minScore = 0.8;
+let failed = false;
+
+for (const result of results) {
+  const avgScore = result.scores.reduce((a, b) => a + b.score, 0) / result.scores.length;
+  
+  if (avgScore < minScore) {
+    console.error(`❌ ${result.name}: ${avgScore.toFixed(2)} (< ${minScore})`);
+    failed = true;
+  } else {
+    console.log(`✅ ${result.name}: ${avgScore.toFixed(2)}`);
+  }
+}
+
+if (failed) {
+  process.exit(1);
+}
+```
+
+## Example: Complete Workflow
+
+Here's a complete example showing the full development cycle:
+
+```ts
+// 1. Define prompt
+// src/translator.prompt.ts
+import { prompt } from "@nudge-ai/core";
+
+export const translatorPrompt = prompt("translator", (p) =>
+  p
+    .persona("expert translator fluent in {{targetLang}}")
+    .context("Users provide text they want translated accurately")
+    .input("text in {{sourceLang}} to translate")
+    .output("translated text in {{targetLang}}")
+    .do("preserve the original meaning and tone exactly", { nudge: 5 })
+    .do("maintain any formatting from the original")
+    .dont("add explanations or notes", { nudge: 4 })
+    .dont("omit any content from the original", { nudge: 5 })
+    .constraint("output only the translation, nothing else")
+    .optional("formal", (p) =>
+      p.do("use formal language and respectful forms")
+    )
+);
+
+// 2. Generate
+// Run: npm run nudge:generate
+
+// 3. Create eval
+// src/translator.eval.ts
+import { evalite } from "evalite";
+import { translatorPrompt } from "./translator.prompt";
+import "./prompts.gen";
+
+evalite("French Translation", {
+  data: [
+    {
+      input: "Hello, how are you?",
+      expected: "Bonjour, comment allez-vous ?",
+      sourceLang: "English",
+      targetLang: "French",
+    },
+    {
+      input: "I love programming.",
+      expected: "J'aime la programmation.",
+      sourceLang: "English",
+      targetLang: "French",
+    },
+  ],
+  
+  task: async (input) => {
+    const systemPrompt = translatorPrompt.toString({
+      sourceLang: input.sourceLang,
+      targetLang: input.targetLang,
+      formal: true,
+    });
+    
+    return await callLLM(systemPrompt, input.input);
+  },
+  
+  scorers: [
+    Levenshtein,
+    
+    (input, output) => ({
+      name: "No Explanations",
+      score: !output.includes("(") && !output.includes("Note:") ? 1 : 0,
+    }),
+    
+    async (input, output) => ({
+      name: "Meaning Preserved",
+      score: await llmJudge(
+        input.input,
+        output,
+        "The translation preserves the exact meaning of the original"
+      ),
+    }),
+  ],
+});
+
+// 4. Run evals
+// Run: npm run eval:dev
+
+// 5. Iterate based on results
+// If evals fail, adjust the prompt definition and regenerate
+```
+
+## Troubleshooting
+
+### Evals not running
+
+Make sure:
+- Files end with `.eval.ts` or `.eval.js`
+- You've imported the generated prompts: `import "./prompts.gen"`
+- Your task function is async and returns a string
+
+### Generated prompts not updating
+
+Run with `--force` to regenerate all prompts:
+
+```bash
+npm run nudge:generate -- --force
+```
+
+### High API costs during development
+
+Implement caching (see Best Practices above) and use Evalite's watch mode intelligently—it only re-runs changed evals.
+
+### Type errors with variables
+
+Make sure you're passing all required variables:
+
+```ts
+// ❌ TypeScript error: missing 'targetLang'
+translatorPrompt.toString({ sourceLang: "English" });
+
+// ✅ Correct
+translatorPrompt.toString({ sourceLang: "English", targetLang: "French" });
+```
+
+## Resources
+
+- [Nudge Documentation](/docs)
+- [Evalite Documentation](https://evalite.dev)
+- [Autoevals Scorers](https://github.com/braintrustdata/autoevals)
+- [Vitest Documentation](https://vitest.dev)
+
+## Conclusion
+
+Combining Nudge and Evalite gives you a powerful, type-safe workflow for building and testing AI applications:
+
+- **Nudge** handles prompt engineering with a clean API
+- **Evalite** provides rigorous testing and evaluation
+- **TypeScript** ensures type safety throughout
+- **Local-first** means fast iteration without vendor lock-in
+
+Start small with basic function assertions, then grow into sophisticated LLM-as-judge patterns as your needs evolve. The workflow scales from hobby projects to production systems.
