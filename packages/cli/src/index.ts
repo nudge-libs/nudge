@@ -4,23 +4,22 @@ import * as fs from "fs";
 import { processPrompt, type AIConfig } from "./ai.js";
 import { hashState, loadExistingPrompts } from "./cache.js";
 import { discoverPrompts, type DiscoveredPrompt } from "./discover.js";
+import { evaluateVariant, type VariantEvaluation } from "./eval.js";
 import {
-  evaluateVariant,
-  formatEvaluationSummary,
-  formatVariantEvaluation,
-  type VariantEvaluation,
-} from "./eval.js";
-import {
-  improve,
-  type ImproveOptions,
+  improve as improvePrompts,
+  type ImproveOptions as BaseImproveOptions,
   type ImprovementResult,
 } from "./improve.js";
-import { createSpinner } from "./status.js";
 
 export type GenerateOptions = {
   promptFilenamePattern?: string;
   aiConfig?: AIConfig;
   noCache?: boolean;
+  // Callbacks for Ink UI
+  onPromptStart?: (id: string, variantCount: number) => void;
+  onPromptCached?: (id: string) => void;
+  onPromptDone?: (id: string, variantCount: number) => void;
+  onPromptError?: (id: string, error: Error) => void;
 };
 
 function escapeForTemplateLiteral(text: string): string {
@@ -53,9 +52,6 @@ async function generate(
   }
 
   const existingPrompts = loadExistingPrompts(outputPath);
-
-  console.log(`Processing ${prompts.length} prompt(s)...\n`);
-
   const results = [];
 
   for (const prompt of prompts) {
@@ -65,46 +61,48 @@ async function generate(
     let variants: Record<string, string>;
 
     if (!options.noCache && existing && existing.hash === hash) {
-      console.log(`  ✓ "${prompt.id}" (cached)`);
+      options.onPromptCached?.(prompt.id);
       variants = existing.variants as Record<string, string>;
     } else {
       const definedVariants = prompt.state.variants ?? [];
+      const variantCount = definedVariants.length || 1;
 
-      if (definedVariants.length === 0) {
-        // No variants defined - generate single "default" prompt
-        const spinner = createSpinner(`"${prompt.id}" generating...`);
-        const text = await processPrompt(
-          prompt.state.steps,
-          options.aiConfig!,
-          { silent: true },
-        );
-        spinner.succeed(`"${prompt.id}" generated`);
-        variants = { default: text };
-      } else {
-        // Generate one prompt per variant (base steps + variant steps)
-        const spinner = createSpinner(`"${prompt.id}" generating ${definedVariants.length} variant(s)...`);
-        const variantEntries: [string, string][] = [];
-        for (let i = 0; i < definedVariants.length; i++) {
-          const v = definedVariants[i];
-          spinner.update(`"${prompt.id}" generating variant "${v.name}" (${i + 1}/${definedVariants.length})...`);
-          const combinedSteps: BaseStep[] = [
-            ...prompt.state.steps,
-            ...v.steps,
-          ];
+      try {
+        options.onPromptStart?.(prompt.id, variantCount);
+
+        if (definedVariants.length === 0) {
+          // No variants defined - generate single "default" prompt
           const text = await processPrompt(
-            combinedSteps,
+            prompt.state.steps,
             options.aiConfig!,
             { silent: true },
           );
-          variantEntries.push([v.name, text]);
+          variants = { default: text };
+        } else {
+          // Generate one prompt per variant (base steps + variant steps)
+          const variantEntries: [string, string][] = [];
+          for (let i = 0; i < definedVariants.length; i++) {
+            const v = definedVariants[i];
+            const combinedSteps: BaseStep[] = [
+              ...prompt.state.steps,
+              ...v.steps,
+            ];
+            const text = await processPrompt(combinedSteps, options.aiConfig!, {
+              silent: true,
+            });
+            variantEntries.push([v.name, text]);
+          }
+          variants = Object.fromEntries(variantEntries);
         }
-        spinner.succeed(`"${prompt.id}" generated ${definedVariants.length} variant(s)`);
-        variants = Object.fromEntries(variantEntries);
+
+        options.onPromptDone?.(prompt.id, variantCount);
+      } catch (error) {
+        options.onPromptError?.(prompt.id, error as Error);
+        throw error;
       }
     }
 
     const variables = extractVariables(variants);
-
     const variantNames = Object.keys(variants).filter((k) => k !== "default");
 
     const variantEntriesStr = Object.entries(variants)
@@ -166,7 +164,6 @@ registerPrompts(prompts);
 
   // Write TypeScript file
   fs.writeFileSync(outputPath, code, "utf-8");
-  console.log(`\n✓ Generated ${outputPath} with ${prompts.length} prompt(s)`);
 }
 
 export type EvaluateOptions = {
@@ -174,6 +171,9 @@ export type EvaluateOptions = {
   aiConfig?: AIConfig;
   verbose?: boolean;
   judge?: boolean;
+  // Callbacks for Ink UI
+  onVariantStart?: (promptId: string, variantName: string) => void;
+  onVariantDone?: (evaluation: VariantEvaluation) => void;
 };
 
 async function evaluate(
@@ -200,34 +200,24 @@ async function evaluate(
   );
 
   if (promptsWithTests.length === 0) {
-    console.log("No prompts with tests found.");
-    console.log(
-      '\nAdd tests to your prompts using .test(input, assertion):\n\n  prompt("example", (p) =>\n    p\n      .persona("assistant")\n      .test("Hello", (output) => output.length > 0)\n      .test("Summarize this", "should be concise")\n  )',
+    throw new Error(
+      "No prompts with tests found. Add tests using .test(input, assertion)",
     );
-    return [];
   }
-
-  const totalVariants = promptsWithTests.reduce((sum, p) => {
-    const existing = existingPrompts[p.id];
-    return sum + (existing ? Object.keys(existing.variants).length : 0);
-  }, 0);
-
-  console.log(
-    `Evaluating ${promptsWithTests.length} prompt(s) with ${totalVariants} variant(s)...\n`,
-  );
 
   const evaluations: VariantEvaluation[] = [];
 
   for (const prompt of promptsWithTests) {
     const existing = existingPrompts[prompt.id];
     if (!existing) {
-      console.log(`  ⚠ "${prompt.id}" not found in generated file, skipping`);
       continue;
     }
 
     const tests = prompt.state.tests as PromptTest[];
 
     for (const [variantName, text] of Object.entries(existing.variants)) {
+      options.onVariantStart?.(prompt.id, variantName);
+
       const evaluation = await evaluateVariant(
         prompt.id,
         variantName,
@@ -238,17 +228,35 @@ async function evaluate(
       );
       evaluations.push(evaluation);
 
-      console.log(
-        formatVariantEvaluation(evaluation, options.verbose ?? false),
-      );
+      options.onVariantDone?.(evaluation);
     }
   }
 
-  if (evaluations.length > 0) {
-    console.log(formatEvaluationSummary(evaluations));
-  }
-
   return evaluations;
+}
+
+export type ImproveOptions = BaseImproveOptions & {
+  aiConfig: AIConfig;
+  promptFilenamePattern?: string;
+  // Callbacks for Ink UI
+  onIterationStart?: (
+    promptId: string,
+    variantName: string,
+    iteration: number,
+  ) => void;
+  onIterationDone?: (
+    promptId: string,
+    variantName: string,
+    result: ImprovementResult,
+  ) => void;
+};
+
+async function improve(
+  targetDir: string,
+  outputPath: string,
+  options: ImproveOptions,
+): Promise<ImprovementResult[]> {
+  return improvePrompts(targetDir, outputPath, options);
 }
 
 export {
@@ -256,8 +264,8 @@ export {
   evaluate,
   generate,
   improve,
+  type AIConfig,
   type DiscoveredPrompt,
-  type ImproveOptions,
   type ImprovementResult,
   type VariantEvaluation,
 };

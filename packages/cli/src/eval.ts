@@ -2,7 +2,6 @@ import type { PromptTest } from "@nudge-ai/core/internal";
 import * as z from "zod/mini";
 import type { AIConfig } from "./ai.js";
 import { formatAPIError } from "./errors.js";
-import { createSpinner, createProgress, clearStatusLine } from "./status.js";
 
 export type TestResult = {
   input: string;
@@ -104,10 +103,10 @@ async function callAI(
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(
-      formatAPIError(
-        new Error(`${response.status} - ${errorText}`),
-        { model: config.model, operation: "running evaluation" },
-      ),
+      formatAPIError(new Error(`${response.status} - ${errorText}`), {
+        model: config.model,
+        operation: "running evaluation",
+      }),
     );
   }
 
@@ -116,7 +115,10 @@ async function callAI(
     data = ChatCompletionResponse.parse(await response.json());
   } catch (e) {
     throw new Error(
-      formatAPIError(e, { model: config.model, operation: "running evaluation" }),
+      formatAPIError(e, {
+        model: config.model,
+        operation: "running evaluation",
+      }),
     );
   }
 
@@ -141,8 +143,7 @@ ${assertion}`;
   const response = await callAI(JUDGE_SYSTEM_PROMPT, userMessage, config);
 
   // Extract JSON from response
-  const jsonMatch =
-    response.match(/```json\s*([\s\S]*?)\s*```/) ||
+  const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
     response.match(/```\s*([\s\S]*?)\s*```/) || [null, response];
   const jsonStr = jsonMatch[1] || response;
 
@@ -229,26 +230,13 @@ export async function evaluateVariant(
   tests: PromptTest[],
   config: AIConfig,
   useJudge: boolean,
-  options?: { silent?: boolean },
 ): Promise<VariantEvaluation> {
   const results: TestResult[] = [];
-  const silent = options?.silent ?? false;
-
-  const variantLabel = variantName === "default" ? promptId : `${promptId} [${variantName}]`;
-  const progress = !silent ? createProgress({ total: tests.length, label: `Testing "${variantLabel}"` }) : null;
 
   for (let i = 0; i < tests.length; i++) {
     const test = tests[i];
-    const testLabel = test.description || `test ${i + 1}`;
-    progress?.update(i + 1, testLabel);
-
     const result = await runTest(systemPrompt, test, config, useJudge);
     results.push(result);
-  }
-
-  progress?.done();
-  if (!silent) {
-    clearStatusLine();
   }
 
   const passed = results.filter((r) => r.passed).length;
@@ -311,9 +299,7 @@ export function formatVariantEvaluation(
 ): string {
   const lines: string[] = [];
   const variant =
-    evaluation.variantName === "default"
-      ? ""
-      : ` [${evaluation.variantName}]`;
+    evaluation.variantName === "default" ? "" : ` [${evaluation.variantName}]`;
 
   const statusIcon =
     evaluation.failed === 0 ? "✓" : evaluation.passed > 0 ? "◐" : "✗";
@@ -342,7 +328,9 @@ export function formatEvaluationSummary(
   const overallRate =
     totalTests > 0 ? ((totalPassed / totalTests) * 100).toFixed(0) : "100";
 
-  lines.push(`Total: ${totalPassed}/${totalTests} tests passed (${overallRate}%)`);
+  lines.push(
+    `Total: ${totalPassed}/${totalTests} tests passed (${overallRate}%)`,
+  );
 
   // Find best and worst if multiple variants
   if (evaluations.length > 1) {

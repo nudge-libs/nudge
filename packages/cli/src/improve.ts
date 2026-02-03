@@ -12,13 +12,23 @@ import {
   type PromptChange,
   type SourceHint,
 } from "./improve-ai.js";
-import { createSpinner } from "./status.js";
 
 export type ImproveOptions = {
   promptIds?: string[]; // Filter to specific prompts
   maxIterations: number;
   verbose: boolean;
   judge: boolean;
+  // Callbacks for Ink UI
+  onIterationStart?: (
+    promptId: string,
+    variantName: string,
+    iteration: number,
+  ) => void;
+  onIterationDone?: (
+    promptId: string,
+    variantName: string,
+    result: ImprovementResult,
+  ) => void;
 };
 
 export type ImprovementResult = {
@@ -90,7 +100,9 @@ function formatPromptChange(change: PromptChange): string {
 function formatSourceHints(hints: SourceHint[], promptId: string): string {
   if (hints.length === 0) return "";
 
-  const lines = [`\n💡 Source Hint: Consider these changes in ${promptId}.prompt.ts:`];
+  const lines = [
+    `\n💡 Source Hint: Consider these changes in ${promptId}.prompt.ts:`,
+  ];
 
   for (const hint of hints) {
     lines.push(`   ${hint.action}: ${hint.suggestion}`);
@@ -107,14 +119,17 @@ function getAssertionString(test: PromptTest): string {
   return test.assert;
 }
 
-function resultsAreSame(
-  prev: TestResult[],
-  current: TestResult[],
-): boolean {
+function resultsAreSame(prev: TestResult[], current: TestResult[]): boolean {
   if (prev.length !== current.length) return false;
 
-  const prevFailing = prev.filter((r) => !r.passed).map((r) => r.input).sort();
-  const currFailing = current.filter((r) => !r.passed).map((r) => r.input).sort();
+  const prevFailing = prev
+    .filter((r) => !r.passed)
+    .map((r) => r.input)
+    .sort();
+  const currFailing = current
+    .filter((r) => !r.passed)
+    .map((r) => r.input)
+    .sort();
 
   if (prevFailing.length !== currFailing.length) return false;
 
@@ -132,9 +147,7 @@ async function improveVariant(
 ): Promise<ImprovementResult> {
   let prompt = currentPrompt;
   const allSourceHints: SourceHint[] = [];
-  const variantLabel = variantName === "default" ? promptId : `${promptId} [${variantName}]`;
 
-  const initialSpinner = createSpinner(`"${variantLabel}" running ${tests.length} test(s)...`);
   let evaluation = await evaluateVariant(
     promptId,
     variantName,
@@ -142,13 +155,11 @@ async function improveVariant(
     tests,
     config,
     options.judge,
-    { silent: true },
   );
 
   const initialFailures = evaluation.failed;
 
   if (initialFailures === 0) {
-    initialSpinner.succeed(`"${variantLabel}" all tests passing`);
     return {
       promptId,
       variantName,
@@ -160,31 +171,12 @@ async function improveVariant(
     };
   }
 
-  initialSpinner.stop();
-
   let previousResults = evaluation.results;
 
   for (let i = 0; i < options.maxIterations; i++) {
+    options.onIterationStart?.(promptId, variantName, i + 1);
+
     const failingResults = evaluation.results.filter((r) => !r.passed);
-
-    console.log(`\nIteration ${i + 1}/${options.maxIterations} for "${variantLabel}"`);
-    console.log(`${failingResults.length} failing test(s):\n`);
-
-    // Print failing tests
-    for (const result of failingResults) {
-      const test = tests.find((t) => t.input === result.input);
-      console.log(`  Input: "${result.input.slice(0, 60)}${result.input.length > 60 ? "..." : ""}"`);
-      if (test) {
-        console.log(`  Expected: ${getAssertionString(test)}`);
-      }
-      console.log(`  Got: "${result.output.slice(0, 60)}${result.output.length > 60 ? "..." : ""}"`);
-      if (result.reason) {
-        console.log(`  Reason: ${result.reason}`);
-      }
-      if (failingResults.indexOf(result) < failingResults.length - 1) {
-        console.log(""); // Only add blank line between tests, not after last one
-      }
-    }
 
     // Build failing test info for AI
     const failingTestInfos: FailingTestInfo[] = failingResults.map((r) => {
@@ -199,19 +191,16 @@ async function improveVariant(
     });
 
     // Request improvement from AI
-    const aiSpinner = createSpinner(`Analyzing failures and generating improvements...`);
-    const suggestion = await requestImprovement(prompt, failingTestInfos, config, options.verbose);
-    aiSpinner.stop();
+    const suggestion = await requestImprovement(
+      prompt,
+      failingTestInfos,
+      config,
+      options.verbose,
+    );
     allSourceHints.push(...suggestion.sourceHints);
 
-    if (options.verbose) {
-      console.log("\nAnalysis:");
-      console.log(`  ${suggestion.analysis}`);
-    }
-
     if (suggestion.promptChanges.length === 0) {
-      console.log("\nNo prompt changes suggested.");
-      return {
+      const result: ImprovementResult = {
         promptId,
         variantName,
         iterations: i + 1,
@@ -220,11 +209,8 @@ async function improveVariant(
         sourceHints: allSourceHints,
         status: "plateau",
       };
-    }
-
-    console.log("\nSuggested Changes:");
-    for (const change of suggestion.promptChanges) {
-      console.log(formatPromptChange(change));
+      options.onIterationDone?.(promptId, variantName, result);
+      return result;
     }
 
     // Apply changes
@@ -234,7 +220,6 @@ async function improveVariant(
     updatePromptsGenFile(outputPath, promptId, variantName, prompt);
 
     // Re-evaluate
-    const rerunSpinner = createSpinner(`Re-running ${tests.length} test(s)...`);
     evaluation = await evaluateVariant(
       promptId,
       variantName,
@@ -242,22 +227,10 @@ async function improveVariant(
       tests,
       config,
       options.judge,
-      { silent: true },
     );
-    rerunSpinner.stop();
-
-    // Print test results
-    console.log("\nResults:");
-    for (const result of evaluation.results) {
-      const prevResult = previousResults.find((r) => r.input === result.input);
-      const wasFailingNowPassing = prevResult && !prevResult.passed && result.passed;
-      const status = result.passed ? "✓" : "✗";
-      const suffix = wasFailingNowPassing ? " (fixed)" : "";
-      console.log(`  ${status} ${result.description || `Test: ${result.input.slice(0, 40)}...`}${suffix}`);
-    }
 
     if (evaluation.failed === 0) {
-      return {
+      const result: ImprovementResult = {
         promptId,
         variantName,
         iterations: i + 1,
@@ -266,12 +239,13 @@ async function improveVariant(
         sourceHints: allSourceHints,
         status: "improved",
       };
+      options.onIterationDone?.(promptId, variantName, result);
+      return result;
     }
 
     // Check for plateau
     if (resultsAreSame(previousResults, evaluation.results)) {
-      console.log("\nPlateau detected - same failures as before.");
-      return {
+      const result: ImprovementResult = {
         promptId,
         variantName,
         iterations: i + 1,
@@ -280,12 +254,14 @@ async function improveVariant(
         sourceHints: allSourceHints,
         status: "plateau",
       };
+      options.onIterationDone?.(promptId, variantName, result);
+      return result;
     }
 
     previousResults = evaluation.results;
   }
 
-  return {
+  const result: ImprovementResult = {
     promptId,
     variantName,
     iterations: options.maxIterations,
@@ -294,12 +270,17 @@ async function improveVariant(
     sourceHints: allSourceHints,
     status: "max_iterations",
   };
+  options.onIterationDone?.(promptId, variantName, result);
+  return result;
 }
 
 export async function improve(
   targetDir: string,
   outputPath: string,
-  options: ImproveOptions & { aiConfig: AIConfig; promptFilenamePattern?: string },
+  options: ImproveOptions & {
+    aiConfig: AIConfig;
+    promptFilenamePattern?: string;
+  },
 ): Promise<ImprovementResult[]> {
   const pattern = options.promptFilenamePattern ?? "**/*.prompt.{ts,js}";
   const prompts = await discoverPrompts(targetDir, pattern);
@@ -307,8 +288,9 @@ export async function improve(
   const existingPrompts = loadExistingPrompts(outputPath);
 
   if (Object.keys(existingPrompts).length === 0) {
-    console.log("No generated prompts found. Run 'npx nudge generate' first.");
-    return [];
+    throw new Error(
+      "No generated prompts found. Run 'npx nudge generate' first.",
+    );
   }
 
   // Filter to prompts that have tests
@@ -324,21 +306,14 @@ export async function improve(
   }
 
   if (promptsWithTests.length === 0) {
-    console.log("No prompts with tests found.");
-    if (options.promptIds && options.promptIds.length > 0) {
-      console.log(`Filtered for: ${options.promptIds.join(", ")}`);
-    }
-    return [];
+    throw new Error("No prompts with tests found.");
   }
-
-  console.log("Analyzing prompts with failing tests...\n");
 
   const results: ImprovementResult[] = [];
 
   for (const prompt of promptsWithTests) {
     const existing = existingPrompts[prompt.id];
     if (!existing) {
-      console.log(`⚠ "${prompt.id}" not found in generated file, skipping`);
       continue;
     }
 
@@ -356,44 +331,7 @@ export async function improve(
       );
 
       results.push(result);
-
-      // Print source hints after each prompt
-      const sourceHintsOutput = formatSourceHints(result.sourceHints, prompt.id);
-      if (sourceHintsOutput) {
-        console.log(sourceHintsOutput);
-      }
     }
-  }
-
-  console.log("\n" + "━".repeat(60));
-
-  // Print summary
-  console.log("\nSummary:");
-
-  for (const result of results) {
-    const variant = result.variantName === "default" ? "" : ` [${result.variantName}]`;
-    if (result.initialFailures === 0) {
-      console.log(`  ✓ ${result.promptId}${variant}: all tests passing`);
-    } else if (result.status === "improved") {
-      console.log(`  ✓ ${result.promptId}${variant}: improved in ${result.iterations} iteration(s)`);
-    } else if (result.status === "plateau") {
-      console.log(`  ◐ ${result.promptId}${variant}: plateau at ${result.finalFailures} failure(s)`);
-    } else {
-      console.log(`  ✗ ${result.promptId}${variant}: ${result.finalFailures} failure(s) after ${result.iterations} iteration(s)`);
-    }
-  }
-
-  const totalInitialFailures = results.reduce((sum, r) => sum + r.initialFailures, 0);
-  const totalFinalFailures = results.reduce((sum, r) => sum + r.finalFailures, 0);
-  const hasChanges = results.some((r) => r.iterations > 0);
-
-  if (totalInitialFailures > 0) {
-    console.log(`\nTotal: ${totalInitialFailures - totalFinalFailures} failure(s) fixed`);
-  }
-
-  if (hasChanges) {
-    console.log("\n⚠️  Note: Changes are in prompts.gen.ts only.");
-    console.log("    Run 'npx nudge generate' to reset, or apply source hints permanently.");
   }
 
   return results;

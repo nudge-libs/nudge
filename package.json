@@ -11,12 +11,12 @@
   },
   "private": true,
   "scripts": {
-    "build": "bun run --cwd packages/core build && bun run --cwd packages/cli build",
-    "dev": "bun run build && concurrently -n core,cli,example -c blue,green,magenta \"bun run --cwd packages/core dev\" \"bun run --cwd packages/cli dev\" \"bun run --cwd examples/express-app dev\"",
-    "dev:example": "bun run --cwd examples/express-app dev",
-    "dev:docs": "bun run --cwd apps/docs dev",
-    "clean": "bun run --cwd packages/core clean && bun run --cwd packages/cli clean",
-    "typecheck": "bun run --cwd packages/core typecheck && bun run --cwd packages/cli typecheck",
+    "build": "npm run build --workspace=@nudge-ai/core && npm run build --workspace=@nudge-ai/cli",
+    "dev": "npm run build && concurrently -n core,cli,example -c blue,green,magenta \"npm run dev --workspace=@nudge-ai/core\" \"npm run dev --workspace=@nudge-ai/cli\" \"npm run dev --workspace=example-express\"",
+    "dev:example": "npm run dev --workspace=example-express",
+    "dev:docs": "npm run dev --workspace=docs",
+    "clean": "npm run clean --workspace=@nudge-ai/core && npm run clean --workspace=@nudge-ai/cli",
+    "typecheck": "npm run typecheck --workspace=@nudge-ai/core && npm run typecheck --workspace=@nudge-ai/cli",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"

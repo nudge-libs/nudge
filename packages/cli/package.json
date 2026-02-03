@@ -19,7 +19,7 @@
     "codegen"
   ],
   "bin": {
-    "nudge": "./dist/bin.cjs"
+    "nudge": "./dist/bin.mjs"
   },
   "scripts": {
     "build": "tsdown",
@@ -29,14 +29,19 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@caporal/core": "^2.0.7",
-    "@inquirer/prompts": "^8.2.0",
-    "@nudge-ai/core": "workspace:*"
+    "ink": "^6.6.0",
+    "ink-select-input": "^6.2.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.4",
+    "pastel": "^4.0.0",
+    "@nudge-ai/core": "*"
   },
   "peerDependencies": {
     "zod": "^3.23.0 || ^4.0.0"
   },
   "devDependencies": {
+    "@types/react": "^19.2.10",
     "tsdown": "^0.19.0",
     "typescript": "^5.7.0",
     "zod": "^4.3.6"
@@ -45,18 +50,10 @@
     "dist",
     "README.md"
   ],
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.cts",
+  "types": "./dist/index.d.mts",
   "exports": {
-    ".": {
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs"
-    },
-    "./bin": {
-      "require": "./dist/bin.cjs",
-      "import": "./dist/bin.mjs"
-    },
+    ".": "./dist/index.mjs",
+    "./bin": "./dist/bin.mjs",
     "./package.json": "./package.json"
   },
   "publishConfig": {
