@@ -53,6 +53,16 @@ export const summarizerPrompt = prompt("summarizer", (p) =>
     .test(
       "The patient received 500mg of medication twice daily for 14 days. Blood pressure decreased from 150/95 to 120/80 mmHg.",
       "must include all dosage numbers (500mg, twice daily, 14 days) and both blood pressure readings exactly as stated",
+    )
+    // These tests will likely fail initially and demonstrate the improve command
+    .test(
+      "Artificial intelligence is transforming multiple industries including healthcare, finance, and manufacturing. Machine learning models can now analyze complex data patterns faster than human analysts. Companies investing in AI report productivity gains of 20-40%. However, challenges remain around data privacy, regulatory compliance, and workforce adaptation.",
+      (output) => output.split("\n").length <= 2,
+      "Summary should be exactly 1-2 lines maximum for quick reading",
+    )
+    .test(
+      "The new smartphone features a 6.8-inch display, 5000mAh battery, triple camera system with 200MP main sensor, and starts at $999. It supports 5G connectivity and includes an advanced AI chip for on-device processing.",
+      "should format the key specs as a clean, easy-to-scan list with bullet points or line breaks",
     ),
 );
 
