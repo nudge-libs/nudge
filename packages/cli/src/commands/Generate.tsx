@@ -104,30 +104,30 @@ export function GenerateCommand({ force = false }: GenerateCommandProps) {
       {(status === "generating" || status === "done") && (
         <Box flexDirection="column" marginTop={1}>
           {prompts.map((prompt) => (
-            <Box key={prompt.id}>
+            <Box key={prompt.id} gap={1}>
               {prompt.status === "generating" && (
-                <Box>
-                  <Text color="cyan">◐ </Text>
+                <>
+                  <Text color="cyan">◐</Text>
                   <Text>"{prompt.id}" generating{prompt.variantCount && prompt.variantCount > 1 ? ` ${prompt.variantCount} variant(s)` : ""}...</Text>
-                </Box>
+                </>
               )}
               {prompt.status === "cached" && (
-                <Box>
-                  <Text color="gray">✓ </Text>
+                <>
+                  <Text color="gray">✓</Text>
                   <Text dimColor>"{prompt.id}" (cached)</Text>
-                </Box>
+                </>
               )}
               {prompt.status === "done" && (
-                <Box>
-                  <Text color="green">✓ </Text>
+                <>
+                  <Text color="green">✓</Text>
                   <Text>"{prompt.id}" generated{prompt.variantCount && prompt.variantCount > 1 ? ` ${prompt.variantCount} variant(s)` : ""}</Text>
-                </Box>
+                </>
               )}
               {prompt.status === "error" && (
-                <Box>
-                  <Text color="red">✗ </Text>
+                <>
+                  <Text color="red">✗</Text>
                   <Text>"{prompt.id}" failed</Text>
-                </Box>
+                </>
               )}
             </Box>
           ))}

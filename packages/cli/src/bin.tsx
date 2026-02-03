@@ -2,10 +2,10 @@
 import { render } from "ink";
 import React from "react";
 import {
-  EvalCommand,
-  GenerateCommand,
-  ImproveCommand,
-  InitCommand,
+    EvalCommand,
+    GenerateCommand,
+    ImproveCommand,
+    InitCommand,
 } from "./commands/index.js";
 
 const args = process.argv.slice(2);
@@ -35,7 +35,7 @@ function parseArgs(args: string[]): Record<string, string | boolean> {
 
 function showHelp() {
   console.log(`
-🎯 Nudge CLI - Generate type-safe prompt files for AI applications
+Nudge CLI - Generate type-safe prompt files for AI applications
 
 Usage:
   nudge <command> [options]
