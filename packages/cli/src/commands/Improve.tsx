@@ -4,11 +4,11 @@ import * as path from "path";
 import { useEffect, useState } from "react";
 import type { AIConfig } from "../ai.js";
 import {
-  Error as ErrorMessage,
-  Header,
-  Spinner,
-  Success,
-  Warning,
+    Error as ErrorMessage,
+    Header,
+    Spinner,
+    Success,
+    Warning,
 } from "../components/index.js";
 import { improve as runImprove, type ImprovementResult } from "../index.js";
 
@@ -27,14 +27,23 @@ type ImproveCommandProps = {
 
 type Status = "loading" | "improving" | "done" | "error";
 
+type SourceHint = {
+  stepType: string;
+  action: string;
+  suggestion: string;
+  reason: string;
+};
+
 type ImprovementProgress = {
   promptId: string;
   variantName: string;
   iteration: number;
   maxIterations: number;
   status: "improving" | "improved" | "plateau" | "max_iterations";
+  currentStatus?: string;
   initialFailures?: number;
   finalFailures?: number;
+  sourceHints?: SourceHint[];
 };
 
 export function ImproveCommand({
@@ -87,6 +96,31 @@ export function ImproveCommand({
           judge,
           aiConfig: config.ai,
           promptFilenamePattern: config.promptFilenamePattern,
+          onStatus: (promptId, variantName, statusMessage) => {
+            setProgress((prev) => {
+              const existing = prev.find(
+                (p) => p.promptId === promptId && p.variantName === variantName,
+              );
+              if (existing) {
+                return prev.map((p) =>
+                  p.promptId === promptId && p.variantName === variantName
+                    ? { ...p, currentStatus: statusMessage }
+                    : p,
+                );
+              }
+              return [
+                ...prev,
+                {
+                  promptId,
+                  variantName,
+                  iteration: 0,
+                  maxIterations,
+                  status: "improving",
+                  currentStatus: statusMessage,
+                },
+              ];
+            });
+          },
           onIterationStart: (promptId, variantName, iteration) => {
             setProgress((prev) => {
               const existing = prev.find(
@@ -123,6 +157,7 @@ export function ImproveCommand({
                       status: result.status,
                       initialFailures: result.initialFailures,
                       finalFailures: result.finalFailures,
+                      sourceHints: result.sourceHints,
                     }
                   : p,
               ),
@@ -225,33 +260,55 @@ function ImprovementStatus({ progress }: { progress: ImprovementProgress }) {
         : "yellow";
 
   return (
-    <Box>
-      <Text color={color}>{icon} </Text>
-      <Text bold>{progress.promptId}</Text>
-      {progress.variantName !== "default" && (
-        <Text dimColor> ({progress.variantName})</Text>
-      )}
-      {progress.status === "improving" && (
-        <Text dimColor>
-          {" "}
-          - iteration {progress.iteration}/{progress.maxIterations}
-        </Text>
-      )}
-      {progress.status === "improved" && (
-        <Text color="green">
-          {" "}
-          - improved ({progress.initialFailures} → {progress.finalFailures}{" "}
-          failures)
-        </Text>
-      )}
-      {progress.status === "plateau" && (
-        <Text color="yellow"> - plateau reached</Text>
-      )}
-      {progress.status === "max_iterations" && (
-        <Text color="yellow">
-          {" "}
-          - max iterations ({progress.finalFailures} failures remaining)
-        </Text>
+    <Box flexDirection="column">
+      <Box>
+        <Text color={color}>{icon} </Text>
+        <Text bold>{progress.promptId}</Text>
+        {progress.variantName !== "default" && (
+          <Text dimColor> ({progress.variantName})</Text>
+        )}
+        {progress.status === "improving" && progress.iteration > 0 && (
+          <Text dimColor>
+            {" "}
+            - iteration {progress.iteration}/{progress.maxIterations}
+          </Text>
+        )}
+        {progress.status === "improving" && progress.currentStatus && (
+          <Text dimColor> - {progress.currentStatus}</Text>
+        )}
+        {progress.status === "improved" && (
+          <Text color="green">
+            {" "}
+            - improved ({progress.initialFailures} → {progress.finalFailures}{" "}
+            failures)
+          </Text>
+        )}
+        {progress.status === "plateau" && (
+          <Text color="yellow"> - plateau reached</Text>
+        )}
+        {progress.status === "max_iterations" && (
+          <Text color="yellow">
+            {" "}
+            - max iterations ({progress.finalFailures} failures remaining)
+          </Text>
+        )}
+      </Box>
+
+      {/* Show source hints if available */}
+      {progress.sourceHints && progress.sourceHints.length > 0 && (
+        <Box flexDirection="column" marginLeft={2}>
+          <Text dimColor>  💡 Suggested source changes:</Text>
+          {progress.sourceHints.map((hint, i) => (
+            <Box key={i} flexDirection="column" marginLeft={2}>
+              <Text dimColor>
+                {hint.action} {hint.stepType}: {hint.suggestion}
+              </Text>
+              <Text dimColor italic>
+                  └ {hint.reason}
+              </Text>
+            </Box>
+          ))}
+        </Box>
       )}
     </Box>
   );

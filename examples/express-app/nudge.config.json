@@ -2,6 +2,6 @@
   "ai": {
     "provider": "openrouter",
     "apiKeyEnvVar": "OPENROUTER_API_KEY",
-    "model": "tngtech/deepseek-r1t2-chimera:free"
+    "model": "x-ai/grok-code-fast-1"
   }
 }
