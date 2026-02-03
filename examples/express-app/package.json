@@ -4,15 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch src/index.ts",
-    "start": "bun src/index.ts"
+    "dev": "npx tsx watch src/index.ts",
+    "start": "npx tsx src/index.ts"
   },
   "dependencies": {
-    "@nudge-ai/core": "workspace:*",
+    "@nudge-ai/core": "*",
     "express": "^4.21.0"
   },
   "devDependencies": {
-    "@nudge-ai/cli": "workspace:*",
+    "@nudge-ai/cli": "*",
     "@types/express": "^5.0.0",
     "typescript": "^5.7.0"
   }

@@ -1,7 +1,6 @@
 import { formatStepForAI, type BaseStep } from "@nudge-ai/core/internal";
 import * as z from "zod/mini";
 import { formatAPIError, validateModelResponse } from "./errors.js";
-import { createSpinner } from "./status.js";
 
 export type AIConfig = {
   provider: "openai" | "openrouter" | "local";
@@ -114,9 +113,6 @@ export async function processPrompt(
   }
 
   const stepsDescription = steps.map(formatStepForAI).join("\n\n");
-  const silent = options?.silent ?? false;
-
-  const spinner = !silent ? createSpinner(`Synthesizing prompt with ${config.model}...`) : null;
 
   let response: Response;
   try {
@@ -135,18 +131,16 @@ export async function processPrompt(
       }),
     });
   } catch (e) {
-    spinner?.fail(`Failed to connect to ${config.provider}`);
     throw e;
   }
 
   if (!response.ok) {
     const errorText = await response.text();
-    spinner?.fail(`API error (${response.status})`);
     throw new Error(
-      formatAPIError(
-        new Error(`${response.status} - ${errorText}`),
-        { model: config.model, operation: "generating prompt" },
-      ),
+      formatAPIError(new Error(`${response.status} - ${errorText}`), {
+        model: config.model,
+        operation: "generating prompt",
+      }),
     );
   }
 
@@ -154,16 +148,19 @@ export async function processPrompt(
   try {
     data = ChatCompletionResponse.parse(await response.json());
   } catch (e) {
-    spinner?.fail("Invalid response from API");
     throw new Error(
-      formatAPIError(e, { model: config.model, operation: "generating prompt" }),
+      formatAPIError(e, {
+        model: config.model,
+        operation: "generating prompt",
+      }),
     );
   }
 
-  spinner?.stop();
-
   const content = data.choices[0]?.message.content ?? "";
-  validateModelResponse(content, { model: config.model, operation: "generating prompt" });
+  validateModelResponse(content, {
+    model: config.model,
+    operation: "generating prompt",
+  });
 
   return content;
 }
