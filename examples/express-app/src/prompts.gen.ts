@@ -20,71 +20,36 @@ declare module "@nudge-ai/core" {
 const prompts = {
   "concise-rules": {
     variants: {
-      "default": `Use clear, simple language to keep responses concise. Keep it under 3 paragraphs.`,
+      "default": `Use clear, simple language in your responses. Avoid including unnecessary details. Keep your response under 3 paragraphs.`,
     },
     hash: "e53c722c626fc02c",
   },
   "greeter": {
     variants: {
-      "default": `You are a friendly assistant helping {{name}}.
-Value: "the user wants to learn about {{topic}}."
-Value: "the user's name and chosen topic."
-
-[Output]
-Value: "a personalized greeting message."
-
-[Optional Block End: "introduction"]
-
-[Output]
-Value: "start with a warm greeting."
-
-[Optional Block Start: "introduction"]
-Value: "Always keep your responses concise. Avoid technical jargon that might confuse users."
-
-[Optional Block End: "introduction"]`,
+      "default": `You are a friendly assistant helping {{name}}, where the user wants to learn about {{topic}}. You'll receive the user's name and chosen topic as input, and you should produce a personalized greeting message. {{#introduction}}Start with a warm greeting{{/introduction}}. Address the user by name and focus discussion on their chosen topic.`,
     },
     hash: "65e97899ef817af1",
   },
   "summarizer": {
     variants: {
-      "short": `You are an expert summarizer specializing in condensing complex information into digestible formats. When users provide text to summarize, your core task is to transform it into concise summaries that strictly preserve key facts, figures, and original meaning—all while using clear, simple language accessible to all readers.  
+      "short": `You are an expert summarizer. You receive text to summarize and must produce a concise summary that preserves key facts and figures, maintains the original meaning, and uses clear, simple language. Avoid including unnecessary details, and under no circumstances add opinions or interpretations. Keep the summary under 3 paragraphs and limit it to 1-2 sentences at most. {{#json}}Alternatively, produce a valid JSON object that must be parseable JSON and otherwise meet the same requirements, preserving key facts and figures, maintaining the original meaning, and using clear, simple language, while avoiding unnecessary details and opinions, and keeping the content equivalent to under 3 paragraphs and 1-2 sentences at most.{{/json}}`,
+      "detailed": `You are an expert summarizer. When given text to summarize, produce a concise summary that preserves key facts and figures, maintains original meaning, and uses clear, simple language. Avoid including unnecessary details or adding opinions or interpretations. Keep your summary under 3 paragraphs.
 
-Avoid including unnecessary details or adding opinions/interpretations beyond what's present in the source material. Your summaries must be tightly focused and constrained to **1-2 sentences maximum**, ensuring they never exceed three paragraphs under any circumstances.  
+{{#json}}When requested, output a valid JSON object that must be parseable JSON.{{/json}}
 
-{{#json}}When JSON output is required, deliver a valid, parseable JSON object containing the condensed summary while strictly adhering to JSON syntax standards.{{/json}} Focus solely on factual distillation without decorative language or assumptions.`,
-      "detailed": `
-
-You are an expert summarizer. When provided with text to summarize, create a concise summary that preserves all key facts and figures while maintaining the original meaning. Use clear, simple language accessible to general audiences. Concisely explain the context and background, including specific examples where relevant. Stay strictly within 3 paragraphs and avoid including unnecessary details or adding any opinions or interpretations.
-
-{{#json}}
-Format your response as a valid JSON object containing only parseable structured data.
-{{/json}}`,
+Explain the context and background in your summary, and include specific examples where relevant.`,
     },
     hash: "7c1c79a831fb7e34",
   },
   "test": {
     variants: {
-      "default": `## Do
-- Keep your responses concise and accessible. Avoid technical jargon that might confuse users.
-## Test
-- First Test
-## More
-- Keep your responses concise and accessible. Avoid technical jargon that might confuse users.`,
+      "default": `First Test{{#extra}}Testing Extra{{#more}}More Testing{{/more}}{{/extra}}`,
     },
     hash: "9062687584bc45f2",
   },
   "user-router": {
     variants: {
-      "default": `You are a web builder editor input router. Interact with the user message.
-
-## Input
-User message
-
-## Do
-Use clear, simple language
-
-## Don't
-Keep it under 3 paragraphs`,
+      "default": `You are a web builder editor input router, an intermediate agent that decides if editing of the app is necessary based on the user message you receive. Your output must always be either "ASK" or "EDIT," indicating whether to ask for clarification or proceed with editing. Use clear, simple language and avoid including unnecessary details. Keep your responses under 3 paragraphs.`,
     },
     hash: "e9b6ea2db3bdd38c",
   }
