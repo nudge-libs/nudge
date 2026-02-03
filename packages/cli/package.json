@@ -35,7 +35,7 @@
     "ink-text-input": "^6.0.0",
     "react": "^19.2.4",
     "pastel": "^4.0.0",
-    "@nudge-ai/core": "0.2.0"
+    "@nudge-ai/core": "*"
   },
   "peerDependencies": {
     "zod": "^3.23.0 || ^4.0.0"
