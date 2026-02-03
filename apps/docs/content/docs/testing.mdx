@@ -1,0 +1,108 @@
+---
+title: Testing Prompts
+description: Add tests to evaluate prompt quality.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Overview
+
+Define test cases for your prompts to ensure they behave as expected. Tests help catch issues early and validate prompt quality before shipping to production.
+
+## Adding Tests
+
+Use `.test()` to define test cases for a prompt:
+
+```ts
+const summarizer = prompt("summarizer", (p) =>
+  p
+    .persona("expert summarizer")
+    .input("text to summarize")
+    .output("concise summary")
+    .test(
+      "The quick brown fox jumps over the lazy dog.",
+      (output) => output.length < 100,
+      "Output should be concise"
+    )
+    .test(
+      "Long technical document about quantum computing...",
+      "should mention key concepts without jargon",
+      "Simplifies technical content"
+    )
+);
+```
+
+## Test Types
+
+Nudge supports two types of assertions:
+
+### Function Assertions
+
+Run immediately and are fast:
+
+```ts
+.test("input text", (output) => output.includes("expected phrase"))
+.test("input text", (output) => output.length < 500)
+.test("input text", (output) => output.split("\n").length <= 3)
+```
+
+Function assertions are evaluated directly by Node.js, so they run instantly without additional API calls. Use these for hard requirements and measurable constraints.
+
+### String Assertions
+
+Describe expected behavior in natural language. Requires the LLM judge to evaluate:
+
+```ts
+.test("input text", "should be professional and polite")
+.test("input text", "must not contain personal opinions")
+.test("input text", "should include specific examples")
+```
+
+String assertions are more flexible and closer to how you'd naturally describe prompt behavior, but require the `--judge` flag to evaluate.
+
+## Evaluating Tests
+
+### Run tests
+
+```bash
+# Function assertions only (fast)
+npx @nudge-ai/cli eval
+
+# Include string assertions with LLM judge
+npx @nudge-ai/cli eval --judge
+
+# Show detailed results
+npx @nudge-ai/cli eval --verbose
+```
+
+Output shows which tests pass/fail and details about failures:
+
+```
+✓ summarizer: passed
+✗ analyzer: 2 failed
+  ✗ Input: "Some data..."
+    Expected: "should identify trends"
+    Got: "The data shows..."
+```
+
+## CLI Options
+
+### `eval`
+
+| Option      | Default | Description                           |
+|-------------|---------|---------------------------------------|
+| `--verbose` | —       | Show detailed test results            |
+| `--judge`   | —       | Use LLM to evaluate string assertions |
+
+## Best Practices
+
+<Callout>
+  Start with function assertions—they're fast and cover basic behavior. Add string assertions for nuanced quality checks that need the LLM judge.
+</Callout>
+
+- **Be specific**: Test concrete inputs and outputs, not vague expectations
+- **Mix assertion types**: Use function assertions for hard requirements, strings for nuanced behavior
+- **Test edge cases**: Include inputs that challenge your prompt (very long text, special characters, etc.)
+- **Keep tests focused**: Each test should verify one specific behavior
+
+Once your tests are in place, use the [self-improvement](/docs/self-improvement) command to automatically fix failing tests.
