@@ -1,6 +1,6 @@
 {
   "name": "@nudge-ai/core",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Core library for Nudge - type-safe prompt builder for AI applications",
   "type": "module",
   "license": "MIT",
