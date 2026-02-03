@@ -1,6 +1,6 @@
 {
   "name": "@nudge-ai/cli",
-  "version": "0.0.1-beta.4",
+  "version": "0.2.0",
   "description": "CLI for Nudge - generate type-safe prompt files for AI applications",
   "type": "module",
   "license": "MIT",
@@ -35,7 +35,7 @@
     "ink-text-input": "^6.0.0",
     "react": "^19.2.4",
     "pastel": "^4.0.0",
-    "@nudge-ai/core": "*"
+    "@nudge-ai/core": "0.2.0"
   },
   "peerDependencies": {
     "zod": "^3.23.0 || ^4.0.0"

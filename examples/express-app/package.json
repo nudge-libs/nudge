@@ -8,11 +8,11 @@
     "start": "npx tsx src/index.ts"
   },
   "dependencies": {
-    "@nudge-ai/core": "*",
+    "@nudge-ai/core": "0.2.0",
     "express": "^4.21.0"
   },
   "devDependencies": {
-    "@nudge-ai/cli": "*",
+    "@nudge-ai/cli": "0.2.0",
     "@types/express": "^5.0.0",
     "typescript": "^5.7.0"
   }
