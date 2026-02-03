@@ -9,6 +9,10 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 Define test cases for your prompts, then use the CLI to automatically evaluate and improve them. This ensures your AI-generated prompts work well in practice.
 
+<Callout>
+  The `improve` command works best with capable models like **gpt-4o** or **claude-3.5-sonnet**. Weaker models may struggle to generate valid JSON suggestions.
+</Callout>
+
 ## Adding Tests
 
 Use `.test()` to define test cases for a prompt:
