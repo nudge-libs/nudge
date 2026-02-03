@@ -34,6 +34,8 @@ Run `npx @nudge-ai/cli generate` → get an optimized system prompt. It's cached
 - **AI-generated** - Your structure becomes a polished prompt. No hand-tuning.
 - **Cached** - Hash-based caching. Only regenerate what changed.
 - **Composable** - Share rules with `.use()`. Toggle sections with `.optional()`.
+- **Testable** - Define tests and auto-improve prompts with the CLI.
+- **Extensible** - Create custom step types for domain-specific needs.
 
 ## Example
 
@@ -43,11 +45,40 @@ const assistant = prompt("assistant", (p) =>
     .persona("assistant for {{company}}")
     .do("be concise")
     .optional("formal", (p) => p.do("use formal language"))
+    .test(
+      "Hello, how can I help?",
+      (output) => output.length < 500,
+      "Keep responses short"
+    )
 );
 
 // Variables and options are fully typed
 assistant.toString({ company: "Acme", formal: true });
 ```
+
+You can also **test and improve** your prompts:
+
+```bash
+npx @nudge-ai/cli eval              # Run tests
+npx @nudge-ai/cli improve --judge   # Auto-improve failing tests
+```
+
+And **extend with custom steps** for domain-specific needs:
+
+```ts
+import { createBuilder, createStep } from "@nudge-ai/core";
+
+const tone = createStep({
+  name: "tone",
+  build: (style: string) => ({ type: "tone" as const, style }),
+  format: (step) => `[Tone] Write in a ${step.style} tone.`,
+});
+
+const builder = createBuilder([tone]);
+const bot = builder.prompt("bot", (p) => p.persona("assistant").tone("friendly"));
+```
+
+Learn more about [Self-Improvement](/docs/self-improvement) and [Custom Steps](/docs/custom-steps).
 
 ## Packages
 

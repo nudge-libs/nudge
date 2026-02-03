@@ -196,6 +196,24 @@ export default function Home() {
                 Toggle sections at runtime
               </p>
             </div>
+            <div className="p-4 rounded-xl border border-fd-border bg-fd-card/50">
+              <h3 className="font-medium text-sm mb-1">Self-Improvement</h3>
+              <p className="text-fd-muted-foreground text-xs leading-relaxed">
+                Test and auto-improve prompts with CLI
+              </p>
+            </div>
+            <div className="p-4 rounded-xl border border-fd-border bg-fd-card/50">
+              <h3 className="font-medium text-sm mb-1">Custom Steps</h3>
+              <p className="text-fd-muted-foreground text-xs leading-relaxed">
+                Extend with domain-specific step types
+              </p>
+            </div>
+            <div className="p-4 rounded-xl border border-fd-border bg-fd-card/50">
+              <h3 className="font-medium text-sm mb-1">Variants</h3>
+              <p className="text-fd-muted-foreground text-xs leading-relaxed">
+                A/B test multiple prompt variations
+              </p>
+            </div>
           </div>
         </div>
       </div>

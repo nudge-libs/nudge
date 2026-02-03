@@ -1,89 +1,19 @@
 ---
 title: Self-Improvement
-description: Test and automatically improve your prompts.
+description: Automatically improve your prompts based on test results.
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-## Overview
+## Prompts Self-Improvement
 
-Define test cases for your prompts, then use the CLI to automatically evaluate and improve them. This ensures your AI-generated prompts work well in practice.
+Once you've defined tests for your prompts, use the `improve` command to automatically fix failing tests. The CLI analyzes failures and suggests improvements to make your prompts work better in practice.
 
-## Adding Tests
+<Callout>
+  The `improve` command works best with capable models like **gpt-4o** or **claude-3.5-sonnet**. Weaker models may struggle to generate valid JSON suggestions.
+</Callout>
 
-Use `.test()` to define test cases for a prompt:
-
-```ts
-const summarizer = prompt("summarizer", (p) =>
-  p
-    .persona("expert summarizer")
-    .input("text to summarize")
-    .output("concise summary")
-    .test(
-      "The quick brown fox jumps over the lazy dog.",
-      (output) => output.length < 100,
-      "Output should be concise"
-    )
-    .test(
-      "Long technical document about quantum computing...",
-      "should mention key concepts without jargon",
-      "Simplifies technical content"
-    )
-);
-```
-
-## Test Types
-
-Nudge supports two types of assertions:
-
-### Function Assertions
-
-Run immediately and are fast:
-
-```ts
-.test("input text", (output) => output.includes("expected phrase"))
-.test("input text", (output) => output.length < 500)
-.test("input text", (output) => output.split("\n").length <= 3)
-```
-
-Function assertions are evaluated directly by Node.js, so they run instantly without additional API calls.
-
-### String Assertions
-
-Describe expected behavior in natural language. Requires the LLM judge to evaluate:
-
-```ts
-.test("input text", "should be professional and polite")
-.test("input text", "must not contain personal opinions")
-.test("input text", "should include specific examples")
-```
-
-String assertions are more flexible and closer to how you'd naturally describe prompt behavior, but require the `--judge` flag.
-
-## Evaluating Tests
-
-### Run tests
-
-```bash
-# Function assertions only (fast)
-npx @nudge-ai/cli eval
-
-# Include string assertions with LLM judge
-npx @nudge-ai/cli eval --judge
-
-# Show detailed results
-npx @nudge-ai/cli eval --verbose
-```
-
-Output shows which tests pass/fail and details about failures:
-
-```
-✓ summarizer: passed
-✗ analyzer: 2 failed
-  ✗ Input: "Some data..."
-    Expected: "should identify trends"
-    Got: "The data shows..."
-```
+See [Testing Prompts](/docs/testing) to learn how to add tests.
 
 ## Auto-Improving Prompts
 
@@ -149,6 +79,8 @@ Here's a typical testing and improvement workflow:
 
 ### 1. Add tests to your prompt
 
+First, define tests in your prompt file. See [Testing Prompts](/docs/testing) for details on test types and syntax:
+
 ```ts
 // src/translator.prompt.ts
 export const translator = prompt("translator", (p) =>
@@ -208,13 +140,6 @@ Apply these to your `.prompt.ts` file, then regenerate.
 
 ## CLI Options Reference
 
-### `eval`
-
-| Option      | Default | Description                           |
-|-------------|---------|---------------------------------------|
-| `--verbose` | —       | Show detailed test results            |
-| `--judge`   | —       | Use LLM to evaluate string assertions |
-
 ### `improve`
 
 | Option                 | Default | Description                                            |
@@ -224,13 +149,15 @@ Apply these to your `.prompt.ts` file, then regenerate.
 | `--verbose`            | —       | Show detailed improvement analysis                     |
 | `--judge`              | —       | Use LLM to evaluate string assertions                  |
 
+See [Testing Prompts](/docs/testing#cli-options) for the `eval` command options.
+
 ## Best Practices
 
 <Callout>
-  Start with function assertions—they're fast and cover basic behavior. Add string assertions for nuanced quality checks that need the LLM judge.
+  Run `eval` first to understand what's failing before running `improve`. Use `--verbose` to see detailed analysis.
 </Callout>
 
-- **Be specific**: Test concrete inputs and outputs, not vague expectations
-- **Mix assertion types**: Use function assertions for hard requirements, strings for nuanced behavior
-- **Iterate**: Use `improve` repeatedly as you refine your prompts
+- **Iterate gradually**: Use improvement in small batches rather than all at once
+- **Review suggestions**: Check the source hints carefully before applying them to your `.prompt.ts` files
+- **Re-baseline**: After improvements, regenerate and run tests again to ensure changes stuck
 - **Version control**: Commit your `.prompt.ts` files and suggested changes separately from generated files
