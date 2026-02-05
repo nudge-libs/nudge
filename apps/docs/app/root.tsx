@@ -1,12 +1,12 @@
 import SearchDialog from "@/components/search";
 import { RootProvider } from "fumadocs-ui/provider/react-router";
 import {
-    isRouteErrorResponse,
-    Links,
-    Meta,
-    Outlet,
-    Scripts,
-    ScrollRestoration,
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
 } from "react-router";
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -33,6 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script defer data-domain="nudge-ai.dev" src="https://nudge-events.up.railway.app/js/script.js"></script>
       </head>
       <body className="flex flex-col min-h-screen">
         <RootProvider search={{ SearchDialog }}>{children}</RootProvider>
